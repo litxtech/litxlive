@@ -1,0 +1,56 @@
+name: Android Build & Deploy to Google Play (Disabled)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: 🔧 Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: 📱 Setup Expo
+      uses: expo/expo-github-action@v8
+      with:
+        expo-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+        
+    - name: 📥 Install dependencies
+      run: |
+        rm -f package-lock.json
+        npm install --legacy-peer-deps
+      
+    - name: 🏗️ Build Android AAB
+      run: |
+        eas build --platform android --profile production --non-interactive --no-wait
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        
+    - name: 📲 Deploy to Google Play Console
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        packageName: com.litxtech.lumivideochat
+        releaseFiles: app/build/outputs/bundle/release/*.aab
+        track: internal
+        status: completed
+        inAppUpdatePriority: 3
+        
+    - name: ✅ Notification
+      run: |
+        echo "🎉 Android APK başarıyla Google Play Console'a yüklendi!"
+        echo "📱 Internal test track'te yayında"

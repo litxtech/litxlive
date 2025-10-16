@@ -1,0 +1,104 @@
+name: EAS Android Build & Submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Google Play track"
+        required: true
+        default: "internal"   # internal / alpha / beta / production
+      version:
+        description: "expo.version (örn: 1.0.4)"
+        required: false
+      notes:
+        description: "Release notes"
+        required: false
+        default: "Improvements and fixes"
+
+  push:
+    branches: [ main ]
+    paths:
+      - "app/**"
+      - "android/**"
+      - "package.json"
+      - "app.json"
+      - "app.config.*"
+      - "eas.json"
+      - ".github/workflows/eas-android.yml"
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-submit:
+    runs-on: ubuntu-latest
+    env:
+      EAS_NO_VCS: 1
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+
+      - name: Install deps
+        run: |
+          echo "Node $(node -v), npm $(npm -v)"
+          set +e
+          npm ci
+          if [ $? -ne 0 ]; then
+            echo "npm ci failed; falling back to npm install to resync lockfile"
+            npm install --no-audit --progress=false
+          fi
+          set -e
+
+      - name: Patch app/eas config
+        run: |
+          node -e "require('fs').existsSync('scripts/patch-app-config.mjs') && console.log('patch script exists')"
+          node scripts/patch-app-config.mjs
+
+      - name: Verify expo config
+        run: npx expo config --type public
+
+      - name: Set expo.version (optional)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+        run: |
+          node -e "const fs=require('fs');let c=require('./app.json');c.expo=c.expo||{};c.expo.version='${{ inputs.version }}';fs.writeFileSync('app.json', JSON.stringify(c,null,2));console.log('Set version =>', c.expo.version);"
+
+      - name: EAS Build (Android AAB)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build \
+            -p android \
+            --profile production \
+            --auto-increment \
+            --non-interactive \
+            --wait \
+            --json > build.json
+          echo "Build JSON ↓"; cat build.json
+
+      - name: EAS Submit → Google Play (conditional)
+        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          TRACK="${{ github.event_name == 'workflow_dispatch' && inputs.track || 'internal' }}"
+          NOTES="${{ github.event_name == 'workflow_dispatch' && inputs.notes || 'Automated deploy' }}"
+          echo "$PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+          eas submit \
+            -p android \
+            --latest \
+            --track "$TRACK" \
+            --android-service-account-file service-account.json \
+            --release-notes "$NOTES" \
+            --non-interactive

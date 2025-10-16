@@ -1,0 +1,92 @@
+name: EAS Build & Deploy to Google Play (Disabled)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'android'
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+
+jobs:
+  build:
+    name: Build on EAS
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: 📱 Setup Expo and EAS
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+
+    - name: 📥 Install dependencies
+      run: |
+        rm -f package-lock.json
+        npm install --legacy-peer-deps
+
+    - name: 🏗️ EAS Build for Android
+      run: |
+        eas build --platform android --profile production --non-interactive --auto-submit
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    - name: 📊 Get build info
+      run: |
+        echo "Build ID: $(eas build:list --platform android --limit 1 --json | jq -r '.[0].id')"
+        
+  deploy:
+    name: Deploy to Google Play
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 🚀 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📥 Download AAB from EAS
+      run: |
+        # EAS'den en son build'i indir
+        eas build:download --platform android --latest
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    - name: 📲 Upload to Google Play Console
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        packageName: com.litxtech.lumivideochat
+        releaseFiles: '*.aab'
+        track: internal
+        status: completed
+        inAppUpdatePriority: 3
+        whatsNewDirectory: distribution/whatsnew
+        mappingFile: app/build/outputs/mapping/release/mapping.txt
+
+    - name: ✅ Success notification
+      if: success()
+      run: |
+        echo "✅ Başarılı! Android AAB Google Play Console'a yüklendi"
+        echo "📱 Internal test track'te yayında"
+        echo "🔗 https://play.google.com/console"
+
+    - name: ❌ Failure notification
+      if: failure()
+      run: |
+        echo "❌ Deploy başarısız oldu!"
+        echo "Lütfen Google Play Console ayarlarını kontrol edin"

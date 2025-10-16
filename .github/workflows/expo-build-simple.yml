@@ -1,0 +1,45 @@
+name: Expo Build (Simplified)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: EAS Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: 📱 Setup EAS
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+
+    - name: 🏗️ Build with EAS
+      run: |
+        eas build --platform android --profile production --non-interactive
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    - name: ✅ Success
+      if: success()
+      run: |
+        echo "✅ Build başarılı!"
+        echo "📱 Expo dashboard'da görüntüleyebilirsiniz"
+        echo "🔗 https://expo.dev/"
+
+    - name: ❌ Failure
+      if: failure()
+      run: |
+        echo "❌ Build başarısız!"
+        echo "Lütfen Expo dashboard'ı kontrol edin"

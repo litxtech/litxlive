@@ -1,0 +1,39 @@
+name: Expo Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Setup Expo
+      uses: expo/expo-github-action@v8
+      with:
+        expo-version: latest
+        token: hyFSKrQPlS7wgsQqSgT4c3e08iz5B-gdwrmM7EEX
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Install EAS CLI
+      run: npm install -g eas-cli
+      
+    - name: Build for Android
+      run: npx eas build -p android --non-interactive
+      
+    - name: Build for iOS
+      run: npx eas build -p ios --non-interactive
