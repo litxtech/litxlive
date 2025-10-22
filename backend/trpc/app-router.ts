@@ -40,6 +40,44 @@ import { adminUserGetProfileRoute, adminUserUpdateProfileRoute } from "./routes/
 import { adminUsersCreateTestRoute } from "./routes/admin/users/create-test/route";
 import { stripeCreatePaymentIntentRoute } from "./routes/purchases/stripe/create-payment-intent";
 import { stripeConfirmPaymentRoute } from "./routes/purchases/stripe/confirm-payment";
+import {
+  adminRBACGetCurrentUserRoute,
+  adminRBACGetPermissionsRoute,
+  adminRBACGetRolesRoute,
+  adminRBACCreateRoleRoute,
+  adminRBACUpdateRolePermissionsRoute,
+  adminRBACAssignRoleRoute,
+} from "./routes/admin/rbac/route";
+import {
+  adminAuditGetLogsRoute,
+  adminAuditGetStatsRoute,
+} from "./routes/admin/audit/route";
+import {
+  adminApprovalsGetPendingRoute,
+  adminApprovalsCreateRequestRoute,
+  adminApprovalsProcessRequestRoute,
+  adminApprovalsGetHistoryRoute,
+} from "./routes/admin/approvals/route";
+import {
+  adminBansGetTypesRoute,
+  adminBansCreateTypeRoute,
+  adminBansBanUserRoute,
+  adminBansUnbanUserRoute,
+  adminBansGetUserBansRoute,
+  adminBansGetActiveBansRoute,
+  adminBansGetStatsRoute,
+} from "./routes/admin/bans/route";
+import {
+  adminPoliciesGetPoliciesRoute,
+  adminPoliciesCreateRoute,
+  adminPoliciesUpdateRoute,
+  adminPoliciesApproveRoute,
+  adminPoliciesPublishRoute,
+  adminPoliciesGetBySlugRoute,
+  adminPoliciesGetVersionsRoute,
+  adminPoliciesArchiveRoute,
+} from "./routes/admin/policies/route";
+>>>>>>> Stashed changes
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -77,6 +115,43 @@ export const appRouter = createTRPCRouter({
     economy: createTRPCRouter({
       getSettings: adminEconomyGetSettingsRoute,
       updateSetting: adminEconomyUpdateSettingRoute,
+    }),
+    rbac: createTRPCRouter({
+      getCurrentUser: adminRBACGetCurrentUserRoute,
+      getPermissions: adminRBACGetPermissionsRoute,
+      getRoles: adminRBACGetRolesRoute,
+      createRole: adminRBACCreateRoleRoute,
+      updateRolePermissions: adminRBACUpdateRolePermissionsRoute,
+      assignRole: adminRBACAssignRoleRoute,
+    }),
+    audit: createTRPCRouter({
+      getLogs: adminAuditGetLogsRoute,
+      getStats: adminAuditGetStatsRoute,
+    }),
+    approvals: createTRPCRouter({
+      getPending: adminApprovalsGetPendingRoute,
+      createRequest: adminApprovalsCreateRequestRoute,
+      processRequest: adminApprovalsProcessRequestRoute,
+      getHistory: adminApprovalsGetHistoryRoute,
+    }),
+    bans: createTRPCRouter({
+      getTypes: adminBansGetTypesRoute,
+      createType: adminBansCreateTypeRoute,
+      banUser: adminBansBanUserRoute,
+      unbanUser: adminBansUnbanUserRoute,
+      getUserBans: adminBansGetUserBansRoute,
+      getActiveBans: adminBansGetActiveBansRoute,
+      getStats: adminBansGetStatsRoute,
+    }),
+    policies: createTRPCRouter({
+      getPolicies: adminPoliciesGetPoliciesRoute,
+      create: adminPoliciesCreateRoute,
+      update: adminPoliciesUpdateRoute,
+      approve: adminPoliciesApproveRoute,
+      publish: adminPoliciesPublishRoute,
+      getBySlug: adminPoliciesGetBySlugRoute,
+      getVersions: adminPoliciesGetVersionsRoute,
+      archive: adminPoliciesArchiveRoute,
     }),
   }),
   purchases: createTRPCRouter({

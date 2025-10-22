@@ -453,6 +453,7 @@ export default function HomeScreen() {
   };
 
   const handleCountrySelect = (countryCode: string) => {
+    console.log('[Home] Country filter updated:', countryCode);
     setCountryFilter(countryCode);
     setShowCountryModal(false);
   };
@@ -644,7 +645,10 @@ export default function HomeScreen() {
               <View style={styles.filterButtons}>
                 <TouchableOpacity
                   style={[styles.filterButton, genderFilter === 'all' && styles.filterButtonActive]}
-                  onPress={() => setGenderFilter('all')}
+                  onPress={() => {
+                    setGenderFilter('all');
+                    console.log('[Filter] Gender set to: all');
+                  }}
                 >
                   <Text style={[styles.filterButtonText, genderFilter === 'all' && styles.filterButtonTextActive]}>
                     Tümü
@@ -652,7 +656,10 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.filterButton, genderFilter === 'male' && styles.filterButtonActive]}
-                  onPress={() => setGenderFilter('male')}
+                  onPress={() => {
+                    setGenderFilter('male');
+                    console.log('[Filter] Gender set to: male');
+                  }}
                 >
                   <Text style={[styles.filterButtonText, genderFilter === 'male' && styles.filterButtonTextActive]}>
                     Erkek
@@ -660,7 +667,10 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.filterButton, genderFilter === 'female' && styles.filterButtonActive]}
-                  onPress={() => setGenderFilter('female')}
+                  onPress={() => {
+                    setGenderFilter('female');
+                    console.log('[Filter] Gender set to: female');
+                  }}
                 >
                   <Text style={[styles.filterButtonText, genderFilter === 'female' && styles.filterButtonTextActive]}>
                     Kadın
@@ -668,7 +678,10 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.filterButton, genderFilter === 'mixed' && styles.filterButtonActive]}
-                  onPress={() => setGenderFilter('mixed')}
+                  onPress={() => {
+                    setGenderFilter('mixed');
+                    console.log('[Filter] Gender set to: mixed');
+                  }}
                 >
                   <Text style={[styles.filterButtonText, genderFilter === 'mixed' && styles.filterButtonTextActive]}>
                     Karışık
@@ -681,7 +694,10 @@ export default function HomeScreen() {
               <Text style={styles.filterLabel}>Ülke:</Text>
               <TouchableOpacity
                 style={[styles.countryFilterButton, countryFilter !== 'all' && styles.countryFilterButtonActive]}
-                onPress={() => setShowCountryModal(true)}
+                onPress={() => {
+                  setShowCountryModal(true);
+                  console.log('[Filter] Country modal opened');
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.countryFilterText, countryFilter !== 'all' && styles.countryFilterTextActive]}>
@@ -689,6 +705,13 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={styles.countryFilterArrow}>▼</Text>
               </TouchableOpacity>
+            </View>
+            
+            {/* Debug Info */}
+            <View style={styles.debugInfo}>
+              <Text style={styles.debugText}>
+                Aktif Filtreler: Cinsiyet={genderFilter}, Ülke={countryFilter}
+              </Text>
             </View>
           </View>
         </View>
@@ -1368,5 +1391,16 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 16,
     letterSpacing: -0.3,
+  },
+  debugInfo: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  debugText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    textAlign: 'center',
   },
 });

@@ -47,6 +47,7 @@ export default function CountrySelectionModal({
   selectedCountry,
 }: CountrySelectionModalProps) {
   const handleCountrySelect = (countryCode: string) => {
+    console.log('[CountryModal] Country selected:', countryCode);
     onSelectCountry(countryCode);
     onClose();
   };

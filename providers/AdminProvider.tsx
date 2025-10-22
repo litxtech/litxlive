@@ -45,6 +45,27 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
+      // First check if admin_users table exists
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('admin_users')
+        .select('id')
+        .limit(1);
+
+      if (tableError) {
+        console.log('[AdminProvider] Admin table not found, creating fallback admin check');
+        
+        // Fallback: Check if user email is admin email
+        if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+          setIsAdmin(true);
+          setIsAuthenticated(true);
+          setAdminData({ id: user.id, email: user.email, role: 'admin' });
+          return;
+        }
+        
+        setIsAdmin(false);
+        return;
+      }
+
       // Check if user has admin role in admin_users table
       const { data: adminUser, error } = await supabase
         .from('admin_users')
@@ -54,8 +75,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        // If admin_users table doesn't exist or user is not admin
-        console.log('[AdminProvider] User is not admin or admin table not found');
+        // Fallback: Check if user email is admin email
+        if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+          setIsAdmin(true);
+          setIsAuthenticated(true);
+          setAdminData({ id: user.id, email: user.email, role: 'admin' });
+          return;
+        }
+        
+        console.log('[AdminProvider] User is not admin');
         setIsAdmin(false);
         return;
       }
