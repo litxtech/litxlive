@@ -98,7 +98,7 @@ export const adminPoliciesCreateRoute = adminProcedure
         INSERT INTO policies (title, slug, content, status, author_id)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
-      `, [input.title, input.slug, input.content, input.status, ctx.user.id]);
+      `, [input.title, input.slug, input.content, input.status, ctx.user?.id]);
 
       return { success: true, policy_id: result.rows[0].id };
     } catch (error) {
@@ -180,7 +180,7 @@ export const adminPoliciesUpdateRoute = adminProcedure
             ) VALUES ($1, $2, $3, 'pending')
           `, [
             'content_approval',
-            ctx.user.id,
+            ctx.user?.id,
             JSON.stringify({ policy_id: input.policy_id })
           ]);
         }
@@ -214,7 +214,7 @@ export const adminPoliciesApproveRoute = adminProcedure
         UPDATE policies 
         SET status = 'approved', approver_id = $1, published_at = NOW(), updated_at = NOW()
         WHERE id = $2
-      `, [ctx.user.id, input.policy_id]);
+      `, [ctx.user?.id, input.policy_id]);
 
       return { success: true };
     } catch (error) {

@@ -28,6 +28,14 @@ interface ChatUser {
   lastMessageTime: string;
   isOnline: boolean;
   unreadCount: number;
+  // LUMI Features
+  lumiId?: string;
+  verificationLevel?: 'none' | 'yellow' | 'blue';
+  isVip?: boolean;
+  age?: number;
+  country?: string;
+  isBlocked?: boolean;
+  isBlockedBy?: boolean;
 }
 
 const mockChats: ChatUser[] = [
@@ -39,6 +47,13 @@ const mockChats: ChatUser[] = [
     lastMessageTime: "2m",
     isOnline: true,
     unreadCount: 2,
+    lumiId: "LUMI-123456",
+    verificationLevel: "yellow",
+    isVip: false,
+    age: 24,
+    country: "TR",
+    isBlocked: false,
+    isBlockedBy: false,
   },
   {
     id: "2",
@@ -48,6 +63,13 @@ const mockChats: ChatUser[] = [
     lastMessageTime: "1h",
     isOnline: true,
     unreadCount: 0,
+    lumiId: "LUMI-234567",
+    verificationLevel: "blue",
+    isVip: true,
+    age: 22,
+    country: "TR",
+    isBlocked: false,
+    isBlockedBy: false,
   },
   {
     id: "3",
@@ -116,6 +138,29 @@ export default function MessagesScreen() {
     setShowChatOptions(true);
   };
 
+  const handleBlockUser = (userId: string) => {
+    Alert.alert(
+      "Kullanıcıyı Engelle",
+      "Bu kullanıcıyı engellemek istediğinizden emin misiniz? Engellenen kullanıcı sizinle mesajlaşamayacak.",
+      [
+        {
+          text: "İptal",
+          style: "cancel"
+        },
+        {
+          text: "Engelle",
+          style: "destructive",
+          onPress: () => {
+            // TODO: Implement actual block functionality
+            console.log("Block user:", userId);
+            setShowChatOptions(false);
+            Alert.alert("Başarılı", "Kullanıcı engellendi.");
+          }
+        }
+      ]
+    );
+  };
+
   const handleVideoCall = (userId: string) => {
     console.log("Start video call with:", userId);
   };
@@ -166,9 +211,37 @@ export default function MessagesScreen() {
 
             <View style={styles.chatContent}>
               <View style={styles.chatHeader}>
-                <Text style={styles.chatName}>{chat.displayName}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.chatName}>{chat.displayName}</Text>
+                  {/* Verification Badges */}
+                  {chat.verificationLevel === 'blue' && (
+                    <View style={styles.blueBadge}>
+                      <Text style={styles.blueBadgeText}>✓</Text>
+                    </View>
+                  )}
+                  {chat.verificationLevel === 'yellow' && (
+                    <View style={styles.yellowBadge}>
+                      <Text style={styles.yellowBadgeText}>✓</Text>
+                    </View>
+                  )}
+                  {/* VIP Badge */}
+                  {chat.isVip && (
+                    <View style={styles.vipBadge}>
+                      <Text style={styles.vipBadgeText}>⭐</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.chatTime}>{chat.lastMessageTime}</Text>
               </View>
+              
+              {/* LUMI-ID and Age */}
+              <View style={styles.userInfoRow}>
+                <Text style={styles.lumiId}>{chat.lumiId}</Text>
+                {chat.age && (
+                  <Text style={styles.age}>{chat.age} yaş</Text>
+                )}
+              </View>
+              
               <Text
                 style={[
                   styles.lastMessage,
@@ -224,6 +297,19 @@ export default function MessagesScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Mesaj Seçenekleri</Text>
+            
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                if (selectedChat) {
+                  handleBlockUser(selectedChat.id);
+                }
+              }}
+            >
+              <Text style={[styles.modalOptionText, { color: "#FF3B30" }]}>
+                🚫 Engelle
+              </Text>
+            </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.modalOption}
@@ -419,5 +505,71 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 16,
     color: Colors.text,
+  },
+  // LUMI Features Styles
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  userInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  lumiId: {
+    fontSize: 10,
+    color: Colors.primary,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  age: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontWeight: '500',
+  },
+  // Verification Badges
+  blueBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#1E90FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  blueBadgeText: {
+    color: 'white',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  yellowBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  yellowBadgeText: {
+    color: 'white',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  vipBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  vipBadgeText: {
+    fontSize: 8,
+    color: '#FFD700',
+    fontWeight: 'bold',
   },
 });

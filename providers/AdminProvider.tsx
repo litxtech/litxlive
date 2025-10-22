@@ -8,6 +8,7 @@ interface AdminRole {
 
 interface AdminData {
   id: string;
+  email?: string;
   is_active: boolean;
   admin_roles: AdminRole[];
   display_name?: string;
@@ -58,7 +59,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
           setIsAdmin(true);
           setIsAuthenticated(true);
-          setAdminData({ id: user.id, email: user.email, role: 'admin' });
+          setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
           return;
         }
         
@@ -79,7 +80,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
           setIsAdmin(true);
           setIsAuthenticated(true);
-          setAdminData({ id: user.id, email: user.email, role: 'admin' });
+          setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
           return;
         }
         

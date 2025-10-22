@@ -43,7 +43,7 @@ export const adminApprovalsGetPendingRoute = adminProcedure
 export const adminApprovalsCreateRequestRoute = adminProcedure
   .input(z.object({
     request_type: z.enum(['coin_addition', 'user_ban', 'payment_refund', 'agency_approval', 'content_approval']),
-    request_data: z.record(z.any()),
+    request_data: z.record(z.string(), z.any()),
     approval_notes: z.string().optional()
   }))
   .mutation(async ({ input, ctx }) => {
@@ -65,7 +65,7 @@ export const adminApprovalsCreateRequestRoute = adminProcedure
         AND au.user_id != $1
         ORDER BY ar.name = 'super_admin' DESC
         LIMIT 1
-      `, [ctx.user.id]);
+      `, [ctx.user?.id]);
 
       if (approverResult.rows.length === 0) {
         throw new Error("No approver found");
@@ -82,7 +82,7 @@ export const adminApprovalsCreateRequestRoute = adminProcedure
         RETURNING id
       `, [
         input.request_type,
-        ctx.user.id,
+        ctx.user?.id,
         approverId,
         JSON.stringify(input.request_data),
         input.approval_notes || null

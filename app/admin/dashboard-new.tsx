@@ -25,6 +25,23 @@ interface DashboardStats {
   complaints: number;
   revenue: number;
   riskScore: number;
+  // LUMI Specific Stats
+  lumiIdsGenerated: number;
+  verifiedUsers: number;
+  vipUsers: number;
+  totalCoins: number;
+  giftsSent: number;
+  subscriptions: {
+    standard: number;
+    gold: number;
+    vip: number;
+  };
+  ibanPayments: number;
+  robotModeration: {
+    active: number;
+    warnings: number;
+    blocks: number;
+  };
 }
 
 interface LiveCall {
@@ -107,6 +124,23 @@ export default function AdminDashboard() {
         complaints: 7,
         revenue: 45230,
         riskScore: 3.2,
+        // LUMI Specific Stats
+        lumiIdsGenerated: 15420,
+        verifiedUsers: 3240,
+        vipUsers: 156,
+        totalCoins: 2450000,
+        giftsSent: 8920,
+        subscriptions: {
+          standard: 12000,
+          gold: 3200,
+          vip: 220,
+        },
+        ibanPayments: 45,
+        robotModeration: {
+          active: 23,
+          warnings: 12,
+          blocks: 3,
+        },
       });
 
       setLiveCalls([
@@ -268,6 +302,105 @@ export default function AdminDashboard() {
               icon="security"
               color="#F97316"
               trend="+2%"
+            />
+          </View>
+          
+          {/* LUMI Specific Stats */}
+          <Text style={styles.sectionTitle}>LUMI Özellikleri</Text>
+          <View style={styles.statsGrid}>
+            <StatCard
+              title="LUMI-ID'ler"
+              value={stats?.lumiIdsGenerated || 0}
+              icon="badge"
+              color="#6366F1"
+              trend="+100%"
+            />
+            <StatCard
+              title="Doğrulanmış"
+              value={stats?.verifiedUsers || 0}
+              icon="verified"
+              color="#10B981"
+              trend="+25%"
+            />
+            <StatCard
+              title="VIP Kullanıcılar"
+              value={stats?.vipUsers || 0}
+              icon="star"
+              color="#F59E0B"
+              trend="+18%"
+            />
+            <StatCard
+              title="Toplam Coin"
+              value={stats?.totalCoins?.toLocaleString() || 0}
+              icon="monetization_on"
+              color="#8B5CF6"
+              trend="+35%"
+            />
+            <StatCard
+              title="Hediye Gönderildi"
+              value={stats?.giftsSent || 0}
+              icon="card_giftcard"
+              color="#EC4899"
+              trend="+42%"
+            />
+            <StatCard
+              title="IBAN Ödemeleri"
+              value={stats?.ibanPayments || 0}
+              icon="account_balance"
+              color="#06B6D4"
+              trend="+8%"
+            />
+          </View>
+          
+          {/* Subscription Stats */}
+          <Text style={styles.sectionTitle}>Abonelik İstatistikleri</Text>
+          <View style={styles.statsGrid}>
+            <StatCard
+              title="Standart"
+              value={stats?.subscriptions?.standard || 0}
+              icon="person"
+              color="#6B7280"
+              trend="+5%"
+            />
+            <StatCard
+              title="Gold"
+              value={stats?.subscriptions?.gold || 0}
+              icon="workspace_premium"
+              color="#FFD700"
+              trend="+22%"
+            />
+            <StatCard
+              title="VIP"
+              value={stats?.subscriptions?.vip || 0}
+              icon="diamond"
+              color="#FF6B6B"
+              trend="+15%"
+            />
+          </View>
+          
+          {/* Robot Moderation Stats */}
+          <Text style={styles.sectionTitle}>Robot Moderasyon</Text>
+          <View style={styles.statsGrid}>
+            <StatCard
+              title="Aktif İzleme"
+              value={stats?.robotModeration?.active || 0}
+              icon="smart_toy"
+              color="#3B82F6"
+              trend="+12%"
+            />
+            <StatCard
+              title="Uyarılar"
+              value={stats?.robotModeration?.warnings || 0}
+              icon="warning"
+              color="#F59E0B"
+              trend="-8%"
+            />
+            <StatCard
+              title="Engellemeler"
+              value={stats?.robotModeration?.blocks || 0}
+              icon="block"
+              color="#EF4444"
+              trend="-15%"
             />
           </View>
         </Animated.View>

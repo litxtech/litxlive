@@ -5,7 +5,7 @@ import { z } from "zod";
 // Get current admin user with role and permissions
 export const adminRBACGetCurrentUserRoute = adminProcedure
   .query(async ({ ctx }) => {
-    console.log("[RBAC] Getting current user:", ctx.user.id);
+    console.log("[RBAC] Getting current user:", ctx.user?.id);
 
     try {
       const result = await pool.query(`
@@ -22,7 +22,7 @@ export const adminRBACGetCurrentUserRoute = adminProcedure
         FROM admin_users au
         JOIN admin_roles ar ON au.role_id = ar.id
         WHERE au.user_id = $1 AND au.is_active = true
-      `, [ctx.user.id]);
+      `, [ctx.user?.id]);
 
       if (result.rows.length === 0) {
         throw new Error("Admin user not found");
@@ -167,7 +167,7 @@ export const adminRBACCreateRoleRoute = adminProcedure
         await client.query(`
           INSERT INTO admin_audit_logs (admin_user_id, action, resource_type, resource_id, new_values)
           VALUES ($1, 'create', 'role', $2, $3)
-        `, [ctx.user.id, roleId, JSON.stringify({ name: input.name, description: input.description })]);
+        `, [ctx.user?.id, roleId, JSON.stringify({ name: input.name, description: input.description })]);
 
         return { success: true, role_id: roleId };
       } catch (error) {
@@ -221,7 +221,7 @@ export const adminRBACUpdateRolePermissionsRoute = adminProcedure
         await client.query(`
           INSERT INTO admin_audit_logs (admin_user_id, action, resource_type, resource_id, new_values)
           VALUES ($1, 'update', 'role', $2, $3)
-        `, [ctx.user.id, input.role_id, JSON.stringify({ permission_ids: input.permission_ids })]);
+        `, [ctx.user?.id, input.role_id, JSON.stringify({ permission_ids: input.permission_ids })]);
 
         return { success: true };
       } catch (error) {
@@ -261,7 +261,7 @@ export const adminRBACAssignRoleRoute = adminProcedure
       await pool.query(`
         INSERT INTO admin_audit_logs (admin_user_id, action, resource_type, resource_id, new_values)
         VALUES ($1, 'update', 'admin_user', $2, $3)
-      `, [ctx.user.id, result.rows[0].id, JSON.stringify({ role_id: input.role_id })]);
+      `, [ctx.user?.id, result.rows[0].id, JSON.stringify({ role_id: input.role_id })]);
 
       return { success: true };
     } catch (error) {

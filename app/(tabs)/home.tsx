@@ -52,6 +52,17 @@ export default function HomeScreen() {
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'mixed'>('all');
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [showCountryModal, setShowCountryModal] = useState(false);
+  
+  // LUMI Advanced Filters
+  const [ageRangeFilter, setAgeRangeFilter] = useState<[number, number]>([18, 65]);
+  const [verificationFilter, setVerificationFilter] = useState<'all' | 'none' | 'yellow' | 'blue'>('all');
+  const [vipFilter, setVipFilter] = useState<boolean | null>(null); // null = all, true = vip only, false = non-vip only
+  const [onlineFilter, setOnlineFilter] = useState<'all' | 'online' | 'live'>('all');
+  
+  // LUMI Robot Moderation
+  const [robotModerationActive, setRobotModerationActive] = useState(false);
+  const [robotModerationTime, setRobotModerationTime] = useState(0);
+  const [showRobotWarning, setShowRobotWarning] = useState(false);
 
   React.useEffect(() => {
     lumiService.setContext(callState === 'connected' ? 'video-call' : 'home');
@@ -77,6 +88,12 @@ export default function HomeScreen() {
         console.log('[VideoCall] Token received successfully');
         setCallState('connected');
         setSearchTime(0);
+        
+        // LUMI Robot Moderation - Start 2-minute monitoring
+        setRobotModerationActive(true);
+        setRobotModerationTime(120); // 2 minutes in seconds
+        setShowRobotWarning(true);
+        console.log('[LUMI] Robot moderation started - 2 minutes monitoring');
       } else {
         console.error('[VideoCall] Failed to get token:', result.error);
         setError(result.error || 'Failed to initialize call');
@@ -259,6 +276,29 @@ export default function HomeScreen() {
       return () => clearInterval(timer);
     }
   }, [callState, user?.coins, updateCoins, handleEndCall]);
+
+  // LUMI Robot Moderation Timer
+  useEffect(() => {
+    if (robotModerationActive && robotModerationTime > 0) {
+      const timer = setInterval(() => {
+        setRobotModerationTime(prev => {
+          const newTime = prev - 1;
+          
+          if (newTime <= 0) {
+            // Robot moderation period ended
+            setRobotModerationActive(false);
+            setShowRobotWarning(false);
+            console.log('[LUMI] Robot moderation period ended - users can now chat freely');
+            return 0;
+          }
+          
+          return newTime;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [robotModerationActive, robotModerationTime]);
 
   useEffect(() => {
     return () => {
@@ -545,6 +585,19 @@ export default function HomeScreen() {
               </View>
             )}
 
+            {/* LUMI Robot Moderation Warning */}
+            {showRobotWarning && robotModerationActive && (
+              <View style={styles.robotModerationCard}>
+                <Text style={styles.robotModerationTitle}>🤖 Robot Moderasyon Aktif</Text>
+                <Text style={styles.robotModerationText}>
+                  İlk 2 dakika robot tarafından izleniyor. Süre: {Math.floor(robotModerationTime / 60)}:{(robotModerationTime % 60).toString().padStart(2, '0')}
+                </Text>
+                <Text style={styles.robotModerationSubtext}>
+                  Bu süre zarfında uygunsuz davranış tespit edilirse otomatik olarak uyarı alacaksınız.
+                </Text>
+              </View>
+            )}
+
             <View style={styles.coinInfo}>
               <Text style={styles.coinTextPrimary}>
                 {user?.coins || 0} coins • {Math.floor((user?.coins || 0) / VIDEO_CALL_RATE)} min remaining
@@ -707,10 +760,128 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             
+            {/* LUMI Advanced Filters */}
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Doğrulama:</Text>
+              <View style={styles.filterButtons}>
+                <TouchableOpacity
+                  style={[styles.filterButton, verificationFilter === 'all' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVerificationFilter('all');
+                    console.log('[Filter] Verification set to: all');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, verificationFilter === 'all' && styles.filterButtonTextActive]}>
+                    Tümü
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, verificationFilter === 'yellow' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVerificationFilter('yellow');
+                    console.log('[Filter] Verification set to: yellow');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, verificationFilter === 'yellow' && styles.filterButtonTextActive]}>
+                    🟡 Doğrulanmış
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, verificationFilter === 'blue' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVerificationFilter('blue');
+                    console.log('[Filter] Verification set to: blue');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, verificationFilter === 'blue' && styles.filterButtonTextActive]}>
+                    🔵 Influencer
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>VIP:</Text>
+              <View style={styles.filterButtons}>
+                <TouchableOpacity
+                  style={[styles.filterButton, vipFilter === null && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVipFilter(null);
+                    console.log('[Filter] VIP set to: all');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, vipFilter === null && styles.filterButtonTextActive]}>
+                    Tümü
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, vipFilter === true && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVipFilter(true);
+                    console.log('[Filter] VIP set to: vip only');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, vipFilter === true && styles.filterButtonTextActive]}>
+                    ⭐ VIP
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, vipFilter === false && styles.filterButtonActive]}
+                  onPress={() => {
+                    setVipFilter(false);
+                    console.log('[Filter] VIP set to: non-vip only');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, vipFilter === false && styles.filterButtonTextActive]}>
+                    👤 Normal
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Durum:</Text>
+              <View style={styles.filterButtons}>
+                <TouchableOpacity
+                  style={[styles.filterButton, onlineFilter === 'all' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setOnlineFilter('all');
+                    console.log('[Filter] Online set to: all');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, onlineFilter === 'all' && styles.filterButtonTextActive]}>
+                    Tümü
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, onlineFilter === 'online' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setOnlineFilter('online');
+                    console.log('[Filter] Online set to: online only');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, onlineFilter === 'online' && styles.filterButtonTextActive]}>
+                    🟢 Çevrimiçi
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterButton, onlineFilter === 'live' && styles.filterButtonActive]}
+                  onPress={() => {
+                    setOnlineFilter('live');
+                    console.log('[Filter] Online set to: live only');
+                  }}
+                >
+                  <Text style={[styles.filterButtonText, onlineFilter === 'live' && styles.filterButtonTextActive]}>
+                    🔴 Canlı
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
             {/* Debug Info */}
             <View style={styles.debugInfo}>
               <Text style={styles.debugText}>
-                Aktif Filtreler: Cinsiyet={genderFilter}, Ülke={countryFilter}
+                Aktif Filtreler: Cinsiyet={genderFilter}, Ülke={countryFilter}, Doğrulama={verificationFilter}, VIP={vipFilter}, Durum={onlineFilter}
               </Text>
             </View>
           </View>
@@ -1402,5 +1573,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     textAlign: 'center',
+  },
+  // LUMI Robot Moderation Styles
+  robotModerationCard: {
+    backgroundColor: 'rgba(255, 193, 7, 0.15)',
+    borderWidth: 1,
+    borderColor: '#FFC107',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 8,
+  },
+  robotModerationTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFC107',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  robotModerationText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  robotModerationSubtext: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });

@@ -33,12 +33,16 @@ export interface User {
   role?: 'user' | 'creator' | 'owner';
   owner_level?: number | null;
   
+  // LUMI-ID System
+  lumiId?: string;
+  
   // Verification status
   emailVerified?: boolean;
   phoneVerified?: boolean;
   identityVerified?: boolean;
   selfieVerified?: boolean;
   verificationStatus?: 'none' | 'pending' | 'verified' | 'rejected';
+  verificationLevel?: 'none' | 'yellow' | 'blue';
   
   // Agency status
   isAgency?: boolean;

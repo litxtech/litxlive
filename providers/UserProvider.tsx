@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "@/types/user";
 import { authService } from "@/services/auth";
+import LumiIdService from "@/lib/lumiId";
+import VerificationService from "@/lib/verification";
 
 const STORAGE_KEY = "litx_user";
 
@@ -97,6 +99,17 @@ export const [UserProvider, useUser] = createContextHook(() => {
 
         const display = profile?.display_name || session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || session.user.email!.split("@")[0];
         const isSupport = (session.user.email || '').toLowerCase() === 'support@litxtech.com';
+        // Generate LUMI-ID if not exists
+        const lumiId = profile?.lumi_id || LumiIdService.generateLumiId();
+        
+        // Calculate verification level
+        const verificationStatus = {
+          phone: profile?.phone_verified || false,
+          email: (session.user as any).email_confirmed_at != null,
+          admin: isSupport
+        };
+        const verificationLevel = VerificationService.calculateLevel(verificationStatus);
+
         const u: User = {
           id: session.user.id,
           userId: `LTX-${session.user.id.substring(0, 8)}`,
@@ -120,6 +133,9 @@ export const [UserProvider, useUser] = createContextHook(() => {
           emailVerified: (session.user as any).email_confirmed_at != null,
           phoneVerified: false,
           createdAt: profile?.created_at || new Date().toISOString(),
+          // LUMI Features
+          lumiId: lumiId,
+          verificationLevel: verificationLevel,
         };
         await persistAndSet(u);
         return;

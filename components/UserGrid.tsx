@@ -20,6 +20,11 @@ interface User {
   gender: string;
   online_status: boolean;
   is_live: boolean;
+  lumi_id?: string;
+  verification_level?: 'none' | 'yellow' | 'blue';
+  is_vip?: boolean;
+  age?: number;
+  bio?: string;
 }
 
 interface UserGridProps {
@@ -40,6 +45,11 @@ const mockUsers: User[] = [
     gender: 'female',
     online_status: true,
     is_live: true,
+    lumi_id: 'LUMI-123456',
+    verification_level: 'yellow',
+    is_vip: false,
+    age: 24,
+    bio: 'Merhaba! Yeni arkadaşlar arıyorum 😊',
   },
   {
     id: '22222222-2222-2222-2222-222222222222',
@@ -50,6 +60,11 @@ const mockUsers: User[] = [
     gender: 'female',
     online_status: true,
     is_live: true,
+    lumi_id: 'LUMI-234567',
+    verification_level: 'blue',
+    is_vip: true,
+    age: 22,
+    bio: 'Influencer & Model 💎',
   },
   {
     id: '33333333-3333-3333-3333-333333333333',
@@ -60,6 +75,11 @@ const mockUsers: User[] = [
     gender: 'female',
     online_status: true,
     is_live: false,
+    lumi_id: 'LUMI-345678',
+    verification_level: 'yellow',
+    is_vip: false,
+    age: 26,
+    bio: 'Sanat ve müzik sever 🎨',
   },
   {
     id: '44444444-4444-4444-4444-444444444444',
@@ -70,6 +90,11 @@ const mockUsers: User[] = [
     gender: 'female',
     online_status: true,
     is_live: true,
+    lumi_id: 'LUMI-456789',
+    verification_level: 'none',
+    is_vip: false,
+    age: 23,
+    bio: 'Eğlence ve sohbet için buradayım! 🎉',
   },
   {
     id: '55555555-5555-5555-5555-555555555555',
@@ -80,6 +105,11 @@ const mockUsers: User[] = [
     gender: 'female',
     online_status: true,
     is_live: false,
+    lumi_id: 'LUMI-567890',
+    verification_level: 'yellow',
+    is_vip: false,
+    age: 25,
+    bio: 'Filipino beauty looking for friends 🌺',
   },
   {
     id: '66666666-6666-6666-6666-666666666666',
@@ -90,6 +120,11 @@ const mockUsers: User[] = [
     gender: 'male',
     online_status: true,
     is_live: false,
+    lumi_id: 'LUMI-678901',
+    verification_level: 'none',
+    is_vip: false,
+    age: 28,
+    bio: 'Venezuelan guy, love to chat! 🇻🇪',
   },
 ];
 
@@ -161,27 +196,61 @@ export default function UserGrid({ onUserPress }: UserGridProps) {
               </View>
               
               <View style={styles.userInfo}>
-                <Text style={styles.userName} numberOfLines={1}>
-                  {user.display_name}
-                </Text>
-                <View style={styles.countryContainer}>
-                  <Text style={styles.countryFlag}>
-                    {getCountryFlag(user.country)}
+                <View style={styles.nameRow}>
+                  <Text style={styles.userName} numberOfLines={1}>
+                    {user.display_name}
                   </Text>
-                  <Text style={styles.countryName}>
-                    {user.country === 'TR' ? 'Turkey' : 
-                     user.country === 'PH' ? 'Philippines' :
-                     user.country === 'VE' ? 'Venezuela' :
-                     user.country === 'CO' ? 'Colombia' :
-                     user.country === 'BR' ? 'Brazil' :
-                     user.country === 'PK' ? 'Pakistan' :
-                     user.country === 'VN' ? 'Vietnam' :
-                     user.country === 'EG' ? 'Egypt' :
-                     user.country === 'SY' ? 'Syria' :
-                     user.country === 'MY' ? 'Malaysia' :
-                     user.country === 'IN' ? 'India' : user.country}
-                  </Text>
+                  {/* Verification Badges */}
+                  {user.verification_level === 'blue' && (
+                    <View style={styles.blueBadge}>
+                      <Text style={styles.blueBadgeText}>✓</Text>
+                    </View>
+                  )}
+                  {user.verification_level === 'yellow' && (
+                    <View style={styles.yellowBadge}>
+                      <Text style={styles.yellowBadgeText}>✓</Text>
+                    </View>
+                  )}
+                  {/* VIP Badge */}
+                  {user.is_vip && (
+                    <View style={styles.vipBadge}>
+                      <MaterialIcons name="star" size={12} color="#FFD700" />
+                    </View>
+                  )}
                 </View>
+                
+                {/* LUMI-ID */}
+                <Text style={styles.lumiId}>{user.lumi_id}</Text>
+                
+                {/* Age and Country */}
+                <View style={styles.infoRow}>
+                  <Text style={styles.age}>{user.age} yaş</Text>
+                  <View style={styles.countryContainer}>
+                    <Text style={styles.countryFlag}>
+                      {getCountryFlag(user.country)}
+                    </Text>
+                    <Text style={styles.countryName}>
+                      {user.country === 'TR' ? 'Turkey' : 
+                       user.country === 'PH' ? 'Philippines' :
+                       user.country === 'VE' ? 'Venezuela' :
+                       user.country === 'CO' ? 'Colombia' :
+                       user.country === 'BR' ? 'Brazil' :
+                       user.country === 'PK' ? 'Pakistan' :
+                       user.country === 'VN' ? 'Vietnam' :
+                       user.country === 'EG' ? 'Egypt' :
+                       user.country === 'SY' ? 'Syria' :
+                       user.country === 'MY' ? 'Malaysia' :
+                       user.country === 'IN' ? 'India' : user.country}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Bio */}
+                {user.bio && (
+                  <Text style={styles.bio} numberOfLines={2}>
+                    {user.bio}
+                  </Text>
+                )}
               </View>
             </TouchableOpacity>
           ))}
@@ -287,5 +356,72 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     fontWeight: '500',
+  },
+  // LUMI Features Styles
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  lumiId: {
+    fontSize: 10,
+    color: Colors.primary,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  age: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '500',
+  },
+  bio: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    lineHeight: 14,
+    marginTop: 2,
+  },
+  // Verification Badges
+  blueBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#1E90FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  blueBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  yellowBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  yellowBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  vipBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
 });

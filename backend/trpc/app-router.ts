@@ -77,7 +77,6 @@ import {
   adminPoliciesGetVersionsRoute,
   adminPoliciesArchiveRoute,
 } from "./routes/admin/policies/route";
->>>>>>> Stashed changes
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({

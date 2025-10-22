@@ -80,7 +80,7 @@ export const adminBansBanUserRoute = adminProcedure
           RETURNING id
         `, [
           'user_ban',
-          ctx.user.id,
+          ctx.user?.id,
           JSON.stringify({
             user_id: input.user_id,
             ban_type_id: input.ban_type_id,
@@ -104,7 +104,7 @@ export const adminBansBanUserRoute = adminProcedure
       `, [
         input.user_id,
         input.ban_type_id,
-        ctx.user.id,
+        ctx.user?.id,
         input.reason,
         duration,
         expiresAt

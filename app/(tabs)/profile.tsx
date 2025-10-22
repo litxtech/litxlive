@@ -39,6 +39,8 @@ import Footer from "@/components/Footer";
 import { Colors } from "@/constants/colors";
 import { useOwner } from "@/providers/OwnerProvider";
 import RealVerificationModal from "@/components/RealVerificationModal";
+import LumiIdService from "@/lib/lumiId";
+import VerificationService from "@/lib/verification";
 
 export default function ProfileScreen() {
   const { user, logout } = useUser();
@@ -231,9 +233,15 @@ export default function ProfileScreen() {
             <View style={styles.profileInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.displayName}>{user?.displayName || "User"}</Text>
-                {user?.isVerified && (
+                {/* Verification Badges */}
+                {user?.verificationLevel === 'blue' && (
                   <View style={styles.blueBadge}>
                     <Text style={styles.blueBadgeText}>✓</Text>
+                  </View>
+                )}
+                {user?.verificationLevel === 'yellow' && (
+                  <View style={styles.yellowBadge}>
+                    <Text style={styles.yellowBadgeText}>✓</Text>
                   </View>
                 )}
                 {user?.isVip && (
@@ -244,8 +252,14 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.username}>@{user?.username || "username"}</Text>
               
+              {/* LUMI-ID Display */}
+              <View style={styles.lumiIdContainer}>
+                <Text style={styles.lumiIdLabel}>LUMI-ID:</Text>
+                <Text style={styles.lumiIdValue}>{user?.lumiId || "LUMI-000000"}</Text>
+              </View>
+              
               <Text style={styles.bio}>
-                {user?.bio || "Welcome to LITX Live! 🎉"}
+                {user?.bio || "Welcome to LUMI Live! 🎉"}
               </Text>
             </View>
 
@@ -969,5 +983,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.text,
     fontWeight: "500" as const,
+  },
+  // LUMI-ID Styles
+  lumiIdContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  lumiIdLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  lumiIdValue: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  // Verification Badge Styles
+  yellowBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  yellowBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
