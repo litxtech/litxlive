@@ -1,0 +1,121 @@
+# GitLab CI/CD Pipeline for Lumi Video Chat
+# React Native + Expo + EAS Build
+
+stages:
+  - install
+  - test
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+  EXPO_CLI_VERSION: "latest"
+  EAS_CLI_VERSION: "latest"
+
+# Cache node_modules for faster builds
+cache:
+  paths:
+    - node_modules/
+    - .expo/
+  key: "$CI_COMMIT_REF_SLUG"
+
+# Install dependencies
+install_dependencies:
+  stage: install
+  image: node:18-alpine
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm install -g @expo/cli@$EXPO_CLI_VERSION
+    - npm install -g eas-cli@$EAS_CLI_VERSION
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+# Run tests
+test:
+  stage: test
+  image: node:18-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - npm run test --if-present
+    - npm run lint --if-present
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Build for development
+build_development:
+  stage: build
+  image: node:18-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Building development version..."
+    - eas build --platform android --profile development --non-interactive
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
+  only:
+    - develop
+
+# Build for preview
+build_preview:
+  stage: build
+  image: node:18-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Building preview version..."
+    - eas build --platform android --profile preview --non-interactive
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
+  only:
+    - main
+
+# Build for production
+build_production:
+  stage: build
+  image: node:18-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Building production version..."
+    - eas build --platform android --profile production --non-interactive
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 month
+  only:
+    - tags
+
+# Deploy to Google Play Store
+deploy_production:
+  stage: deploy
+  image: node:18-alpine
+  dependencies:
+    - build_production
+  script:
+    - echo "Deploying to Google Play Store..."
+    - eas submit --platform android --latest
+  only:
+    - tags
+  when: manual
+
+# Deploy to internal testing
+deploy_internal:
+  stage: deploy
+  image: node:18-alpine
+  dependencies:
+    - build_preview
+  script:
+    - echo "Deploying to internal testing..."
+    - eas submit --platform android --latest
+  only:
+    - main
+  when: manual
