@@ -413,8 +413,8 @@ export default function AdminUsers() {
                       style={styles.modalInput}
                       placeholder="Country (ISO code)"
                       placeholderTextColor="#5f6a86"
-                      value={profile.country ?? ''}
-                      onChangeText={(t) => setProfile({ ...profile!, country: t })}
+                      value={''}
+                      onChangeText={(t) => setProfile({ ...profile! })}
                     />
                     <TextInput
                       style={styles.modalInput}

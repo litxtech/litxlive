@@ -14,7 +14,6 @@ export interface UserSearchResult {
   email: string;
   display_name: string;
   username: string;
-  country: string;
   is_verified: boolean;
   is_vip: boolean;
   coins: number;
@@ -113,7 +112,7 @@ export class AdminApiService {
         p_query: params.query || '',
         p_status: params.status || 'all',
         p_verification: params.verification || 'all',
-        p_country: params.country || 'all',
+        p_country: 'all', // Country filter temporarily disabled
         p_risk_level: params.riskLevel || 'all',
         p_sort_by: params.sortBy || 'last_seen',
         p_sort_order: params.sortOrder || 'desc',

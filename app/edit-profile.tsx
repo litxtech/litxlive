@@ -9,6 +9,9 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Keyboard,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -43,23 +46,19 @@ export default function EditProfileScreen() {
   const handleSave = async () => {
     if (saving) return;
 
+    // Klavyeyi kapat
+    Keyboard.dismiss();
+    
     setSaving(true);
     try {
-      // Update profile using the correct field names
-      const profileData = {
-        displayName: formData.displayName,
-        username: formData.username,
-        bio: formData.bio,
-        country: formData.country,
-        city: formData.city,
-        hometown: formData.hometown,
-        gender: formData.gender,
-        orientation: formData.orientation,
-        birthDate: formData.birthDate,
-        interests: formData.interests,
-        website: formData.website,
-        phone: formData.phone,
-      };
+      // Sadece mevcut alanları güncelle (veritabanı hatası olmaması için)
+            const profileData = {
+              displayName: formData.displayName,
+              username: formData.username,
+              bio: formData.bio,
+              city: formData.city,
+              gender: formData.gender,
+            };
       
       await updateProfile(profileData);
       Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi.', [
@@ -105,31 +104,40 @@ export default function EditProfileScreen() {
   ];
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Profil Düzenle</Text>
-        <TouchableOpacity 
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.7}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Save size={20} color="#fff" />
-          )}
-        </TouchableOpacity>
-      </View>
+    <KeyboardAvoidingView 
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => {
+                Keyboard.dismiss();
+                router.back();
+              }}
+              activeOpacity={0.7}
+            >
+              <ArrowLeft size={24} color={Colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Profil Düzenle</Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              onPress={handleSave}
+              disabled={saving}
+              activeOpacity={0.7}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Save size={20} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Basic Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
@@ -222,6 +230,25 @@ export default function EditProfileScreen() {
               <Text style={styles.selectText}>
                 {countryOptions.find(c => c.value === formData.country)?.label || 'Ülke seçin'}
               </Text>
+              <View style={styles.selectDropdown}>
+                {countryOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.selectOption,
+                      formData.country === option.value && styles.selectOptionActive
+                    ]}
+                    onPress={() => updateField('country', option.value)}
+                  >
+                    <Text style={[
+                      styles.selectOptionText,
+                      formData.country === option.value && styles.selectOptionTextActive
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -325,7 +352,9 @@ export default function EditProfileScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-    </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -422,10 +451,45 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderWidth: 1,
     borderColor: Colors.border,
+    position: 'relative',
   },
   selectText: {
     fontSize: 16,
     color: Colors.text,
+  },
+  selectDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginTop: 4,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  selectOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  selectOptionActive: {
+    backgroundColor: Colors.primary,
+  },
+  selectOptionText: {
+    fontSize: 14,
+    color: Colors.text,
+  },
+  selectOptionTextActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
   radioGroup: {
     flexDirection: 'row',

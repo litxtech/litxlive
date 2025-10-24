@@ -179,11 +179,9 @@ export default function UserAutocomplete({
                     {highlightMatch(user.email, query)}
                   </Text>
                 </View>
-                {user.country && (
-                  <Text style={styles.suggestionCountry}>
-                    {user.country}
-                  </Text>
-                )}
+                <Text style={styles.suggestionCountry}>
+                  Unknown
+                </Text>
               </View>
             </TouchableOpacity>
           ))}

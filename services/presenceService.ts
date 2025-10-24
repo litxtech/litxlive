@@ -47,7 +47,16 @@ async function updatePresence(userId: string, data: PresenceUpdate) {
 async function joinMatchQueue(_userId: string, tags: string[], lang: string, preferences?: any) {
   try {
     await updatePresence(_userId, { in_call: false })
-    const { error } = await supabase.rpc('enqueue_for_match')
+    
+    // Direct insert instead of RPC to avoid queued_at column issue
+    const { error } = await supabase
+      .from('match_queue')
+      .insert({
+        user_id: _userId,
+        preferences: preferences || {},
+        status: 'waiting'
+      })
+    
     if (error) throw error
     return { success: true as const }
   } catch (e: any) {
@@ -58,7 +67,12 @@ async function joinMatchQueue(_userId: string, tags: string[], lang: string, pre
 
 async function leaveMatchQueue(_userId: string) {
   try {
-    const { error } = await supabase.rpc('leave_match_queue')
+    // Direct delete instead of RPC
+    const { error } = await supabase
+      .from('match_queue')
+      .delete()
+      .eq('user_id', _userId)
+    
     if (error) throw error
     return { success: true as const }
   } catch (e: any) {
@@ -69,64 +83,70 @@ async function leaveMatchQueue(_userId: string) {
 
 async function findMatch(myUserId: string, _lang: string, _tags: string[], preferences?: any) {
   try {
-    // First, get user's preferences from profile
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('gender, country, orientation')
-      .eq('id', myUserId)
-      .single();
-
+    console.log('[PresenceService] Find match with preferences:', preferences);
+    
     // Build query with filters
     let query = supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, gender, country, online_status')
+      .select('id, display_name, avatar_url, gender, bio, coins, is_vip, is_verified, country')
       .neq('id', myUserId)
-      .eq('online_status', true)
-      .eq('discoverable', true);
+      .eq('is_active', true);
 
     // Apply gender filter
-    if (preferences?.gender && preferences.gender !== 'all') {
-      if (preferences.gender === 'mixed') {
-        // For mixed, show both genders
-        query = query.in('gender', ['male', 'female']);
-      } else {
-        query = query.eq('gender', preferences.gender);
-      }
+    if (preferences?.gender && preferences.gender !== 'all' && preferences.gender !== 'mixed') {
+      query = query.eq('gender', preferences.gender);
     }
 
     // Apply country filter
     if (preferences?.country && preferences.country !== 'all') {
-      // Support for new country codes
-      const supportedCountries = ['TR', 'PH', 'VE', 'CO', 'BR', 'PK', 'VN', 'EG', 'SY', 'MY', 'IN'];
-      if (supportedCountries.includes(preferences.country)) {
-        query = query.eq('country', preferences.country);
-      } else if (preferences.country === 'EU') {
-        // European countries
-        query = query.in('country', ['DE', 'FR', 'ES', 'IT', 'NL', 'GB']);
-      } else {
-        query = query.eq('country', preferences.country);
-      }
+      query = query.eq('country', preferences.country);
+    }
+
+    // Apply VIP filter
+    if (preferences?.vipFilter === 'vip_only') {
+      query = query.eq('is_vip', true);
+    }
+
+    // Apply verification filter
+    if (preferences?.verificationFilter === 'yellow') {
+      query = query.eq('is_verified', true);
+    } else if (preferences?.verificationFilter === 'blue') {
+      query = query.eq('is_verified', true); // Blue tick için aynı mantık
+    }
+
+    // Apply online filter
+    if (preferences?.onlineFilter === 'online_only') {
+      query = query.eq('online_status', true);
     }
 
     const { data, error } = await query.limit(10);
     
-    if (error) throw error;
+    if (error) {
+      console.error('[PresenceService] Query error:', error);
+      throw error;
+    }
+    
+    console.log('[PresenceService] Found matches:', data?.length || 0);
     
     if (data && data.length > 0) {
       // Return the first available match
       const match = data[0];
-      return { 
-        success: true as const, 
-        match: { 
+      return {
+        success: true as const,
+        match: {
           user_id: match.id,
           display_name: match.display_name,
           avatar_url: match.avatar_url,
           gender: match.gender,
+          bio: match.bio,
+          coins: match.coins,
+          is_vip: match.is_vip,
+          is_verified: match.is_verified,
           country: match.country
-        } 
+        }
       };
     }
-    
+
     return { success: false as const };
   } catch (e: any) {
     console.error('[PresenceService] Find match error:', e?.message || e);

@@ -106,7 +106,8 @@ export const [UserProvider, useUser] = createContextHook(() => {
         const verificationStatus = {
           phone: profile?.phone_verified || false,
           email: (session.user as any).email_confirmed_at != null,
-          admin: isSupport
+          admin: isSupport,
+          level: 'none' as const
         };
         const verificationLevel = VerificationService.calculateLevel(verificationStatus);
 
@@ -265,23 +266,16 @@ export const [UserProvider, useUser] = createContextHook(() => {
       }
 
       // Update profile in database
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: profileData.displayName,
-          username: profileData.username,
-          bio: profileData.bio,
-          country: profileData.country,
-          city: profileData.city,
-          hometown: profileData.hometown,
-          gender: profileData.gender,
-          orientation: profileData.orientation,
-          birth_date: profileData.birthDate,
-          interests: profileData.interests,
-          website: profileData.website,
-          phone: profileData.phone,
-        })
-        .eq('id', user.id);
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            display_name: profileData.displayName,
+            username: profileData.username,
+            bio: profileData.bio,
+            city: profileData.city,
+            gender: profileData.gender,
+          })
+          .eq('id', user.id);
 
       if (error) {
         console.error('[UserProvider] Profile update error:', error);

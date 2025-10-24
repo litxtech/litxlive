@@ -159,7 +159,7 @@ export default function AdminAgencies() {
                 <Text style={styles.agencyName}>{agency.first_name} {agency.last_name}</Text>
                 <Text style={styles.agencyContact}>{agency.email}</Text>
                 {agency.phone && <Text style={styles.agencyPhone}>{agency.phone}</Text>}
-                <Text style={styles.agencyLocation}>{agency.city}, {agency.country}</Text>
+                <Text style={styles.agencyLocation}>{agency.city}</Text>
                 {agency.application_purpose && (
                   <Text style={styles.agencyPurpose}>
                     Amaç: {agency.application_purpose}
@@ -216,7 +216,7 @@ export default function AdminAgencies() {
                 )}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalLabel}>Konum</Text>
-                  <Text style={styles.modalValue}>{selectedAgency.city}, {selectedAgency.country}</Text>
+                  <Text style={styles.modalValue}>{selectedAgency.city}</Text>
                 </View>
                 {selectedAgency.company_name && (
                   <View style={styles.modalSection}>

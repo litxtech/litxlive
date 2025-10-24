@@ -1,7 +1,7 @@
-import "@rork/polyfills";
-import { BundleInspector } from '@rork/inspector';
-import { RorkSafeInsets } from '@rork/safe-insets';
-import { RorkErrorBoundary } from '@rork/rork-error-boundary';
+// import "@rork/polyfills";
+// import { BundleInspector } from '@rork/inspector';
+// import { RorkSafeInsets } from '@rork/safe-insets';
+// import { RorkErrorBoundary } from '@rork/rork-error-boundary';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
@@ -21,6 +21,8 @@ import LumiAssistant from "@/components/LumiAssistant";
 
 import { Stack } from "expo-router";
 import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
+import { StripeProvider } from '@stripe/stripe-react-native';
+import { stripeConfig } from '@/lib/stripe';
 
 
 
@@ -84,30 +86,32 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <LanguageProvider>
-          <UserProvider>
-            <AdminProvider>
-              <OwnerProvider>
-                <PolicyProvider>
-                  <ThemeProvider value={DefaultTheme}>
-                    <GestureHandlerRootView style={styles.container}>
-                      <StatusBar style="light" />
-                      <ErrorBoundary>
-                        <BundleInspector><RorkSafeInsets><RorkErrorBoundary><RootLayoutNav /></RorkErrorBoundary></RorkSafeInsets></BundleInspector>
-                        <PolicyGate />
-                        <LumiAssistant />
-                      </ErrorBoundary>
-                    </GestureHandlerRootView>
-                  </ThemeProvider>
-                </PolicyProvider>
-              </OwnerProvider>
-            </AdminProvider>
-          </UserProvider>
-        </LanguageProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <StripeProvider publishableKey={stripeConfig.publishableKey}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <LanguageProvider>
+            <UserProvider>
+              <AdminProvider>
+                <OwnerProvider>
+                  <PolicyProvider>
+                    <ThemeProvider value={DefaultTheme}>
+                      <GestureHandlerRootView style={styles.container}>
+                        <StatusBar style="dark" />
+                        <ErrorBoundary>
+                          <RootLayoutNav />
+                          <PolicyGate />
+                          <LumiAssistant />
+                        </ErrorBoundary>
+                      </GestureHandlerRootView>
+                    </ThemeProvider>
+                  </PolicyProvider>
+                </OwnerProvider>
+              </AdminProvider>
+            </UserProvider>
+          </LanguageProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </StripeProvider>
   );
 }
 

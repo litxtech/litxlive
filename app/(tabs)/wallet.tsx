@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Coins, Plus, X } from "lucide-react-native";
+import { Coins, Plus, X, Crown } from "lucide-react-native";
 import { useUser } from "@/providers/UserProvider";
 import { useLanguage } from "@/providers/LanguageProvider";
 import Footer from "@/components/Footer";
@@ -19,6 +19,7 @@ import TransactionHistory from "@/components/TransactionHistory";
 import { Colors } from "@/constants/colors";
 import { Platform } from "react-native";
 import StripePayment from "@/components/StripePayment";
+import PaymentModal from "@/components/PaymentModal";
 
 
 
@@ -28,6 +29,8 @@ export default function WalletScreen() {
   const [selectedTab, setSelectedTab] = useState<'buy' | 'transactions'>('buy');
 
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentType, setPaymentType] = useState<'coins' | 'subscription'>('coins');
   const [showStripeModal, setShowStripeModal] = useState<boolean>(false);
   const [selectedPackage, setSelectedPackage] = useState<typeof IAP_PACKAGES[0] | null>(null);
 
@@ -151,6 +154,7 @@ export default function WalletScreen() {
 
         </View>
 
+
         {selectedTab === 'buy' && (
           <View style={styles.section}>
             <View style={styles.companyInfo}>
@@ -249,6 +253,18 @@ export default function WalletScreen() {
         
         <Footer />
       </ScrollView>
+
+      <PaymentModal
+        visible={showPaymentModal}
+        type={paymentType}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={(result) => {
+          console.log('Payment success:', result);
+          setShowPaymentModal(false);
+          // Refresh balance
+          balanceQuery.refetch();
+        }}
+      />
 
       <Modal
         visible={showStripeModal}
@@ -622,5 +638,38 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
+  },
+  // Stripe Payment Styles
+  stripeSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 16,
+  },
+  stripeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  stripeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 8,
+  },
+  stripeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
   },
 });

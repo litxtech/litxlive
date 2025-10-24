@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Modal,
+  TextInput,
 } from "react-native";
 import { Search, MessageCircle, Video, Phone, Trash2, MoreVertical } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -101,8 +102,9 @@ export default function MessagesScreen() {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<ChatUser | null>(null);
   const [showChatOptions, setShowChatOptions] = useState(false);
+  const [chats, setChats] = useState<ChatUser[]>(mockChats);
 
-  const filteredChats = mockChats.filter((chat) =>
+  const filteredChats = chats.filter((chat) =>
     chat.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -124,9 +126,11 @@ export default function MessagesScreen() {
           text: "Sil",
           style: "destructive",
           onPress: () => {
-            // TODO: Implement actual delete functionality
-            console.log("Delete chat:", chatId);
+            // Remove chat from local state
+            setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
+            console.log("Chat deleted:", chatId);
             setShowChatOptions(false);
+            Alert.alert("Başarılı", "Mesaj silindi.");
           }
         }
       ]
@@ -176,13 +180,16 @@ export default function MessagesScreen() {
       </View>
 
       <View style={styles.searchSection}>
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={() => setShowSearch(true)}
-        >
+        <View style={styles.searchBar}>
           <Search color={Colors.textMuted} size={18} />
-          <Text style={styles.searchPlaceholder}>{t('searchMessagesPlaceholder')}</Text>
-        </TouchableOpacity>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t('searchMessagesPlaceholder')}
+            placeholderTextColor={Colors.textMuted}
+          />
+        </View>
       </View>
 
       <ChatSearch
@@ -370,10 +377,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  searchPlaceholder: {
+  searchInput: {
     flex: 1,
     fontSize: 15,
-    color: Colors.textMuted,
+    color: Colors.text,
+    marginLeft: 8,
   },
   chatList: {
     flex: 1,

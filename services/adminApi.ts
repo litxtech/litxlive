@@ -63,10 +63,8 @@ export interface AgencyApplication {
   last_name: string;
   email: string;
   phone?: string;
-  country: string;
   city: string;
   address?: string;
-  birth_date?: string;
   national_id?: string;
   application_purpose: string;
   category_tags?: string[];
@@ -95,7 +93,6 @@ export interface AdminUser {
   name: string;
   email: string;
   username?: string;
-  country: string;
   emailVerified: boolean;
   verified: boolean;
   kycStatus: string;
@@ -129,7 +126,6 @@ export interface AdminUserProfile {
   lastName: string | null;
   username: string | null;
   displayName: string | null;
-  country: string | null;
   city: string | null;
   gender: string | null;
   orientation: string | null;

@@ -7,9 +7,11 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
+import { supabase } from '@/lib/supabase';
 
 interface User {
   id: string;
@@ -147,17 +149,67 @@ const getCountryFlag = (countryCode: string) => {
 
 export default function UserGrid({ onUserPress }: UserGridProps) {
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading users
-    setUsers(mockUsers);
+    loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      console.log('[UserGrid] Loading users...');
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, username, avatar_url, country, gender, online_status, is_vip, is_verified, bio, created_at')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('[UserGrid] Error loading users:', error);
+        // Fallback to mock data
+        setUsers(mockUsers);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        console.log('[UserGrid] Loaded users:', data.length);
+                const formattedUsers = data.map(user => ({
+                  ...user,
+                  is_live: user.online_status || false,
+                  lumi_id: `LUMI-${user.id.slice(-6).toUpperCase()}`,
+                  verification_level: (user.is_verified ? 'yellow' : 'none') as 'none' | 'yellow' | 'blue',
+                  age: 25, // Default age since we don't have birth_date
+                }));
+        setUsers(formattedUsers);
+      } else {
+        console.log('[UserGrid] No users found, using mock data');
+        setUsers(mockUsers);
+      }
+    } catch (error) {
+      console.error('[UserGrid] Error:', error);
+      setUsers(mockUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUserPress = (user: User) => {
     if (onUserPress) {
       onUserPress(user);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Kullanıcılar yükleniyor...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -423,5 +475,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: Colors.textMuted,
+    fontWeight: '500',
   },
 });

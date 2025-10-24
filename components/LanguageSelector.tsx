@@ -175,16 +175,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     padding: 24,
+    paddingBottom: 50,
   },
   modalContent: {
     backgroundColor: '#1a1a1a',
     borderRadius: 16,
     width: '100%',
     maxWidth: 400,
-    maxHeight: '80%',
+    maxHeight: '70%',
+    marginBottom: 20,
     ...Platform.select({
       web: {
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',

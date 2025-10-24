@@ -13,10 +13,11 @@ import {
   Animated,
   Dimensions,
   Pressable,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Mail, Lock, User, Eye, EyeOff, Key, Chrome, Globe, MessageCircle, Users, Shield, Heart, Sparkles, Video, Twitch } from "lucide-react-native";
+import { Mail, Lock, User, Eye, EyeOff, Key, Chrome, Globe, MessageCircle, Users, Shield, Heart, Sparkles, Video, Twitch, Star, Zap, Camera, Mic } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { router, Link } from "expo-router";
 import { useUser } from "@/providers/UserProvider";
@@ -29,6 +30,7 @@ type AuthMode = 'signin' | 'signup' | 'reset' | 'otp' | 'verify-otp';
 
 export default function AuthScreen() {
   const [mode, setMode] = useState<AuthMode>('signin');
+  const [showSplash, setShowSplash] = useState(true);
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +42,96 @@ export default function AuthScreen() {
 
   const { login } = useUser();
   const { t } = useLanguage();
+
+  // Animasyon referansları
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  
+  // Floating animasyonlar
+  const floatingAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+
+  // Splash screen animasyonu - daha hızlı ve profesyonel
+  useEffect(() => {
+    if (showSplash) {
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Sadece 800ms bekle, daha hızlı geçiş
+        setTimeout(() => setShowSplash(false), 800);
+      });
+    }
+  }, [showSplash]);
+
+  // Floating animasyonları
+  useEffect(() => {
+    floatingAnims.forEach((anim, index) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 3000 + index * 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 3000 + index * 500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
+
+    // Pulse animasyonu
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  // Rotate animasyonu
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
 
   const handleSignUp = async () => {
     if (!email || !password || !displayName) {
@@ -779,59 +871,67 @@ export default function AuthScreen() {
     }
   };
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  
-  const floatingAnims = useRef([
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-  ]).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
+        // Splash Screen Component - Daha profesyonel ve hızlı
+        const SplashScreen = () => (
+          <View style={styles.splashContainer}>
+            <LinearGradient
+              colors={['#667eea', '#764ba2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.splashGradient}
+            >
+              <Animated.View
+                style={[
+                  styles.splashContent,
+                  {
+                    opacity: fadeAnim,
+                    transform: [
+                      { scale: scaleAnim },
+                      { translateY: slideAnim }
+                    ],
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.logoContainer,
+                    {
+                      transform: [{ scale: pulseAnim }],
+                    },
+                  ]}
+                >
+                  <View style={styles.logoCircle}>
+                    <Video color="white" size={32} />
+                  </View>
+                </Animated.View>
 
-    floatingAnims.forEach((anim, index) => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 3000 + index * 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim, {
-            toValue: 0,
-            duration: 3000 + index * 500,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    });
-  }, []);
+                <Text style={styles.splashTitle}>LUMI</Text>
+                <Text style={styles.splashSubtitle}>Global Video Friends</Text>
 
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="white" />
+                </View>
+              </Animated.View>
+            </LinearGradient>
+          </View>
+        );
+
+  // Floating Icon Component
   const FloatingIcon = ({ icon: Icon, index, style }: { icon: any; index: number; style: any }) => {
     const translateY = floatingAnims[index].interpolate({
       inputRange: [0, 1],
-      outputRange: [0, -20],
+      outputRange: [0, -30],
     });
 
     const rotate = floatingAnims[index].interpolate({
       inputRange: [0, 1],
-      outputRange: ['0deg', '10deg'],
+      outputRange: ['0deg', '15deg'],
+    });
+
+    const opacity = floatingAnims[index].interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0.3, 0.7, 0.3],
     });
 
     return (
@@ -841,79 +941,171 @@ export default function AuthScreen() {
           style,
           {
             transform: [{ translateY }, { rotate }],
+            opacity,
           },
         ]}
       >
-        <Icon color="rgba(255, 255, 255, 0.3)" size={28} />
+        <Icon color="rgba(255, 255, 255, 0.4)" size={24} />
       </Animated.View>
     );
   };
 
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.keyboardView}
-        >
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
+      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
+      <LinearGradient
+        colors={['#667eea', '#764ba2', '#f093fb']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
+      >
+        {/* Floating Background Icons */}
+        <FloatingIcon icon={Video} index={0} style={{ top: 100, left: 50 }} />
+        <FloatingIcon icon={Heart} index={1} style={{ top: 150, right: 60 }} />
+        <FloatingIcon icon={Users} index={2} style={{ top: 200, left: 30 }} />
+        <FloatingIcon icon={Camera} index={3} style={{ top: 250, right: 40 }} />
+        <FloatingIcon icon={Mic} index={4} style={{ top: 300, left: 70 }} />
+        <FloatingIcon icon={Star} index={5} style={{ top: 350, right: 20 }} />
+        <FloatingIcon icon={Zap} index={0} style={{ top: 400, left: 80 }} />
+        <FloatingIcon icon={Sparkles} index={1} style={{ top: 450, right: 80 }} />
+
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.keyboardView}
           >
-            <Animated.View 
-              style={[
-                styles.content,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
             >
-              <View style={styles.card}>
-                <View style={styles.header}>
-                  <View style={styles.logoWrapper}>
-                    <Text style={styles.logoText}>Lumi</Text>
+              <Animated.View 
+                style={[
+                  styles.content,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                  },
+                ]}
+              >
+                <View style={styles.card}>
+                  <View style={styles.header}>
+                    <Animated.View
+                      style={[
+                        styles.logoContainer,
+                        {
+                          transform: [{ scale: pulseAnim }],
+                        },
+                      ]}
+                    >
+                      <View style={styles.logoCircle}>
+                        <Video color="white" size={32} />
+                      </View>
+                    </Animated.View>
+                    <Text style={styles.logoText}>LUMI</Text>
+                    <Text style={styles.tagline}>Global Video Friends</Text>
+                    <Text style={styles.subtitle}>{getHeaderTitle()}</Text>
+                    <Text style={styles.description}>{getHeaderSubtitle()}</Text>
                   </View>
-                  <Text style={styles.tagline}>Meet. Chat. Connect. Worldwide.</Text>
-                  <Text style={styles.subtitle}>{getHeaderTitle()}</Text>
-                  <Text style={styles.description}>{getHeaderSubtitle()}</Text>
-                </View>
 
-                {mode === 'signin' && renderSignInForm()}
-                {mode === 'signup' && renderSignUpForm()}
-                {mode === 'reset' && renderResetForm()}
-                {mode === 'otp' && renderOTPForm()}
-                {mode === 'verify-otp' && renderVerifyOTPForm()}
+                  {mode === 'signin' && renderSignInForm()}
+                  {mode === 'signup' && renderSignUpForm()}
+                  {mode === 'reset' && renderResetForm()}
+                  {mode === 'otp' && renderOTPForm()}
+                  {mode === 'verify-otp' && renderVerifyOTPForm()}
 
-                <View style={styles.legalLinks}>
-                  <Link href="/privacy" asChild>
-                    <Pressable>
-                      <Text style={styles.legalText}>Privacy Policy</Text>
-                    </Pressable>
-                  </Link>
-                  <Text style={styles.legalDivider}>•</Text>
-                  <Link href="/terms" asChild>
-                    <Pressable>
-                      <Text style={styles.legalText}>Terms of Service</Text>
-                    </Pressable>
-                  </Link>
+                  <View style={styles.legalLinks}>
+                    <Link href="/privacy" asChild>
+                      <Pressable>
+                        <Text style={styles.legalText}>Privacy Policy</Text>
+                      </Pressable>
+                    </Link>
+                    <Text style={styles.legalDivider}>•</Text>
+                    <Link href="/terms" asChild>
+                      <Pressable>
+                        <Text style={styles.legalText}>Terms of Service</Text>
+                      </Pressable>
+                    </Link>
+                  </View>
                 </View>
-              </View>
-            </Animated.View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+              </Animated.View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Splash Screen Styles
+  splashContainer: {
+    flex: 1,
+  },
+  splashGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  splashContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    marginBottom: 30,
+  },
+        logoCircle: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 2,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 4,
+          },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
+        },
+        splashTitle: {
+          fontSize: 36,
+          fontWeight: '800',
+          color: 'white',
+          letterSpacing: 1.5,
+          marginBottom: 8,
+          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 4,
+        },
+        splashSubtitle: {
+          fontSize: 16,
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontWeight: '500',
+          marginBottom: 30,
+          textAlign: 'center',
+        },
+        loadingContainer: {
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+
+  // Main Container Styles
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  backgroundGradient: {
+    flex: 1,
   },
   safeArea: {
     flex: 1,
@@ -935,57 +1127,58 @@ const styles = StyleSheet.create({
     minHeight: Platform.OS === 'web' ? height - 100 : undefined,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 28,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   buttonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
   },
   header: {
     alignItems: "center",
     marginBottom: 32,
   },
-  logoWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  logoText: {
+    fontSize: 36,
+    fontWeight: "800" as const,
+    color: "#667eea",
+    letterSpacing: 1,
     marginBottom: 8,
   },
-  logoText: {
-    fontSize: 40,
-    fontWeight: "700" as const,
-    color: "#6a11cb",
-    letterSpacing: -1,
-  },
-  logoAccent: {
-    fontSize: 40,
-    fontWeight: "700" as const,
-    color: "#2575fc",
-    letterSpacing: -1,
-  },
   tagline: {
-    fontSize: 15,
-    color: "#666",
+    fontSize: 16,
+    color: "#667eea",
     marginBottom: 20,
-    fontWeight: "500" as const,
+    fontWeight: "600" as const,
     letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700" as const,
     color: "#333",
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: "center",
   },
   description: {
-    fontSize: 15,
+    fontSize: 16,
     color: "#666",
     textAlign: "center",
+    marginBottom: 20,
   },
   floatingIcon: {
     position: 'absolute',
-    opacity: 0.7,
+    zIndex: 1,
   },
   form: {
     gap: 16,
@@ -1000,18 +1193,27 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 16 : 14,
-    gap: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: Platform.OS === 'ios' ? 18 : 16,
+    gap: 14,
     borderWidth: 2,
-    borderColor: "#e9ecef",
+    borderColor: "rgba(102, 126, 234, 0.2)",
+    shadowColor: '#667eea',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#333",
+    fontWeight: '500',
   },
   eyeButton: {
     padding: 4,
@@ -1032,19 +1234,28 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   authButton: {
-    marginTop: 16,
-    borderRadius: 14,
+    marginTop: 20,
+    borderRadius: 18,
     overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   authButtonGradient: {
-    borderRadius: 14,
-    paddingVertical: 18,
+    borderRadius: 18,
+    paddingVertical: 20,
     alignItems: "center",
   },
   authButtonText: {
-    fontSize: 16,
-    fontWeight: "600" as const,
+    fontSize: 18,
+    fontWeight: "700" as const,
     color: "white",
+    letterSpacing: 0.5,
   },
   secondaryButton: {
     flexDirection: "row",
@@ -1140,9 +1351,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#4285F4",
-    borderRadius: 14,
+    borderRadius: 16,
     paddingVertical: 18,
-    gap: 8,
+    gap: 10,
+    shadowColor: '#4285F4',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   googleButtonText: {
     fontSize: 16,
@@ -1154,9 +1373,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#9146FF",
-    borderRadius: 14,
+    borderRadius: 16,
     paddingVertical: 18,
-    gap: 8,
+    gap: 10,
+    shadowColor: '#9146FF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   twitchButtonText: {
     fontSize: 16,
@@ -1168,9 +1395,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#1DA1F2",
-    borderRadius: 14,
+    borderRadius: 16,
     paddingVertical: 18,
-    gap: 8,
+    gap: 10,
+    shadowColor: '#1DA1F2',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   twitterButtonText: {
     fontSize: 16,

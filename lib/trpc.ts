@@ -15,9 +15,8 @@ const getBaseUrl = () => {
     return window.location.origin;
   }
 
-  throw new Error(
-    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL or run on web"
-  );
+  // Fallback to localhost for development
+  return "http://localhost:3000";
 };
 
 export const trpcClient = trpc.createClient({

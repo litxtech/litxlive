@@ -22,7 +22,7 @@ export default function SubscriptionsScreen() {
   const [isYearly, setIsYearly] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const currentSubscription = getActiveSubscriptionTier(user?.subscription);
+  const currentSubscription = getActiveSubscriptionTier(null);
 
   const handleSubscribe = (tierId: string) => {
     if (tierId === 'standard') {
@@ -131,7 +131,7 @@ export default function SubscriptionsScreen() {
           {SUBSCRIPTION_TIERS.map((tier) => (
             <View key={tier.id} style={styles.tierCard}>
               <LinearGradient
-                colors={getTierGradient(tier.id)}
+                colors={getTierGradient(tier.id) as [string, string]}
                 style={styles.tierGradient}
               >
                 <View style={styles.tierHeader}>

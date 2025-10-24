@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
+import { useStripe } from '@stripe/stripe-react-native';
+import { trpc } from '@/lib/trpc';
 
 interface StripePaymentProps {
   packageId: string;
@@ -18,18 +21,80 @@ interface StripePaymentProps {
 }
 
 export default function StripePayment({
+  packageId,
   packageName,
   price,
   coins,
   currency = 'USD',
+  onSuccess,
   onCancel,
 }: StripePaymentProps) {
-  const handlePayment = () => {
-    Alert.alert(
-      'Not Available',
-      'Stripe payment is only available on mobile devices. Please use the mobile app to complete your purchase.'
-    );
-    onCancel?.();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [loading, setLoading] = useState(false);
+  
+  const createPaymentIntent = trpc.purchases.stripe.createPaymentIntent.useMutation();
+  const confirmPayment = trpc.purchases.stripe.confirmPayment.useMutation();
+
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+      
+      // Create payment intent
+      const paymentIntent = await createPaymentIntent.mutateAsync({
+        packageId,
+        amount: price * 100, // Convert to cents
+        currency: currency.toLowerCase(),
+      });
+
+      if (!paymentIntent.success) {
+        throw new Error(paymentIntent.error || 'Failed to create payment intent');
+      }
+
+      // Initialize payment sheet
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'Lumi Video Chat',
+        paymentIntentClientSecret: paymentIntent.clientSecret,
+        allowsDelayedPaymentMethods: true,
+      });
+
+      if (initError) {
+        throw new Error(initError.message);
+      }
+
+      // Present payment sheet
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        if (presentError.code !== 'Canceled') {
+          throw new Error(presentError.message);
+        }
+        return;
+      }
+
+      // Confirm payment
+      const confirmResult = await confirmPayment.mutateAsync({
+        paymentIntentId: paymentIntent.paymentIntentId,
+      });
+
+      if (confirmResult.success) {
+        Alert.alert(
+          'Payment Successful!',
+          `You received ${coins} coins. Thank you for your purchase!`
+        );
+        onSuccess?.();
+      } else {
+        throw new Error(confirmResult.error || 'Payment confirmation failed');
+      }
+
+    } catch (error: any) {
+      console.error('[StripePayment] Error:', error);
+      Alert.alert(
+        'Payment Failed',
+        error.message || 'Something went wrong. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,10 +108,15 @@ export default function StripePayment({
       </View>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handlePayment}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Pay with Stripe</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.buttonText}>Pay with Stripe</Text>
+        )}
       </TouchableOpacity>
 
       {onCancel && (
