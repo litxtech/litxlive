@@ -6,6 +6,7 @@
   "routes": [
     { "src": "/_expo/(.*)", "dest": "/_expo/$1" },
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/node_modules/(.*)", "dest": "/node_modules/$1" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
