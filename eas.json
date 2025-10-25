@@ -29,6 +29,18 @@
         },
         "gradleCommand": ":app:bundleRelease"
       }
+    },
+    "production-small": {
+      "autoIncrement": true,
+      "channel": "production",
+      "android": {
+        "buildType": "app-bundle",
+        "env": {
+          "NODE_ENV": "production",
+          "EXPO_OPTIMIZE": "true"
+        },
+        "gradleCommand": ":app:bundleRelease"
+      }
     }
   },
   "submit": {
