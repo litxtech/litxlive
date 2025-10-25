@@ -322,6 +322,98 @@ export const adminApi = {
     return fetchAdmin<{ status: string; timestamp: string }>("/health");
   },
 
+  // User Management Functions
+  async banUser(userId: string, reason: string, days?: number): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_bans')
+        .insert({
+          user_id: userId,
+          reason: reason,
+          banned_until: days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() : null,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('[AdminAPI] Ban user error:', error);
+        throw new Error('Failed to ban user');
+      }
+
+      console.log('[AdminAPI] User banned successfully:', userId);
+    } catch (error) {
+      console.error('[AdminAPI] Ban user error:', error);
+      throw error;
+    }
+  },
+
+  async creditCoins(userId: string, amount: number, reason: string): Promise<void> {
+    try {
+      // Önce kullanıcının mevcut coin'ini al
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('coins')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('[AdminAPI] Get profile error:', profileError);
+        throw new Error('Failed to get user profile');
+      }
+
+      const newCoins = (profile?.coins || 0) + amount;
+
+      // Coin'i güncelle
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ coins: newCoins })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('[AdminAPI] Update coins error:', updateError);
+        throw new Error('Failed to update coins');
+      }
+
+      // Transaction log ekle
+      const { error: logError } = await supabase
+        .from('coin_transactions')
+        .insert({
+          user_id: userId,
+          amount: amount,
+          type: 'admin_credit',
+          reason: reason,
+          created_at: new Date().toISOString()
+        });
+
+      if (logError) {
+        console.warn('[AdminAPI] Transaction log error:', logError);
+      }
+
+      console.log('[AdminAPI] Coins credited successfully:', userId, amount);
+    } catch (error) {
+      console.error('[AdminAPI] Credit coins error:', error);
+      throw error;
+    }
+  },
+
+  async verifyUser(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_verified: true, verified_at: new Date().toISOString() })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[AdminAPI] Verify user error:', error);
+        throw new Error('Failed to verify user');
+      }
+
+      console.log('[AdminAPI] User verified successfully:', userId);
+    } catch (error) {
+      console.error('[AdminAPI] Verify user error:', error);
+      throw error;
+    }
+  },
+
   async getLogs(params?: { limit?: number }): Promise<AdminLog[]> {
     const limit = params?.limit ?? 100;
     const endpoint = `/logs?limit=${encodeURIComponent(String(limit))}`;
