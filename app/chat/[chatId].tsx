@@ -28,6 +28,7 @@ import {
 } from "lucide-react-native";
 
 import { Colors } from "@/constants/colors";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   id: string;
@@ -140,7 +141,7 @@ export default function ChatScreen() {
     setShowOptions(false);
   };
 
-  const handleDeleteMessage = (messageId: string) => {
+  const handleDeleteMessage = async (messageId: string) => {
     Alert.alert(
       "Delete Message",
       "Are you sure you want to delete this message?",
@@ -149,12 +150,30 @@ export default function ChatScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            const updatedMessages = messages.map((m) =>
-              m.id === messageId ? { ...m, deleted: true } : m
-            );
-            setMessages(updatedMessages);
-            setShowOptions(false);
+          onPress: async () => {
+            try {
+              // Database'den mesajı sil
+              const { error } = await supabase
+                .from('messages')
+                .delete()
+                .eq('id', messageId);
+
+              if (error) {
+                console.error('Message deletion error:', error);
+                Alert.alert('Error', 'Failed to delete message');
+                return;
+              }
+
+              // Local state'i güncelle
+              const updatedMessages = messages.filter((m) => m.id !== messageId);
+              setMessages(updatedMessages);
+              setShowOptions(false);
+              
+              console.log('Message deleted successfully');
+            } catch (error) {
+              console.error('Message deletion error:', error);
+              Alert.alert('Error', 'Failed to delete message');
+            }
           },
         },
       ]

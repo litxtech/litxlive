@@ -1,6 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { username, password } = await req.json().catch(() => ({} as any));
 
@@ -8,11 +6,11 @@ export async function POST(req: NextRequest) {
     const isAdmin = username === "support@litxtech.com" || username === "admin";
     
     if (!isAdmin) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     // Başarılı giriş
-    return NextResponse.json({ 
+    return Response.json({ 
       success: true, 
       username: "admin",
       token: "admin-token-" + Date.now(),
@@ -20,6 +18,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[admin/login] Error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return Response.json({ error: "Server error" }, { status: 500 });
   }
 }
