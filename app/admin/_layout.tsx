@@ -121,13 +121,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => {
+              console.log('[AdminLayout] Notifications pressed');
+              router.push('/admin/notifications' as any);
+            }}
+          >
             <MaterialIcons name="notifications" size={20} color={Colors.primary} />
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationBadgeText}>3</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => {
+              console.log('[AdminLayout] Search pressed');
+              router.push('/admin/search' as any);
+            }}
+          >
             <MaterialIcons name="search" size={20} color={Colors.primary} />
           </TouchableOpacity>
         </View>

@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
+import { useAdmin } from '@/providers/AdminProvider';
+import { useRouter } from 'expo-router';
 
 const Btn = ({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }) => (
   <Pressable onPress={onPress} style={styles.btn} testID={testID}>
@@ -27,6 +29,8 @@ type AuditRow = {
 };
 
 export default function AdminPanel() {
+  const { isAdmin, isLoading, isAuthenticated } = useAdmin();
+  const router = useRouter();
   const [meRole, setMeRole] = useState<string | null>(null);
   const [meEmail, setMeEmail] = useState<string | null>(null);
   const [ownerLevel, setOwnerLevel] = useState<number>(0);
@@ -40,6 +44,15 @@ export default function AdminPanel() {
 
   const insets = useSafeAreaInsets();
   const targetUserId = useMemo(() => selected?.id ?? '', [selected]);
+
+  // Admin authentication check
+  useEffect(() => {
+    console.log('[AdminPanel] Auth check - isLoading:', isLoading, 'isAdmin:', isAdmin, 'isAuthenticated:', isAuthenticated);
+    if (!isLoading && !isAdmin) {
+      console.log('[AdminPanel] Not admin, redirecting');
+      router.replace('/admin' as any);
+    }
+  }, [isAdmin, isLoading, router]);
 
   useEffect(() => {
     (async () => {
@@ -168,12 +181,20 @@ export default function AdminPanel() {
     if (error) throw new Error(error.message);
   };
 
-  if (!isOwner) {
+  if (isLoading) {
+    return (
+      <View style={styles.noAccess} testID="admin-loading">
+        <Text style={styles.noAccessTitle}>Loading Admin Panel...</Text>
+      </View>
+    );
+  }
+
+  if (!isAdmin) {
     return (
       <View style={styles.noAccess} testID="admin-no-access">
-        <Text style={styles.noAccessTitle}>Erişim yok: Bu sayfa yalnızca OWNER için.</Text>
+        <Text style={styles.noAccessTitle}>Erişim yok: Bu sayfa yalnızca ADMIN için.</Text>
         <Text style={styles.noAccessDesc}>
-          support@litxtech.com ile giriş yap ve owner rolü verdiğimiz hesaptan aç.
+          support@litxtech.com ile giriş yap ve admin yetkisi verdiğimiz hesaptan aç.
         </Text>
       </View>
     );

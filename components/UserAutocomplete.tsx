@@ -1,198 +1,131 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
-  Platform,
+  FlatList,
 } from 'react-native';
-import { adminApi, AdminUser } from '@/services/adminApi';
-import { Search, User, Mail } from 'lucide-react-native';
+import { Search, User } from 'lucide-react-native';
+import { Colors } from '@/constants/colors';
+import { supabase } from '@/lib/supabase';
 
-interface UserAutocompleteProps {
-  placeholder?: string;
-  onUserSelect: (user: AdminUser) => void;
-  onTextChange?: (text: string) => void;
-  initialValue?: string;
-  style?: any;
+interface User {
+  id: string;
+  email: string;
+  display_name: string;
+  username: string;
 }
 
-export default function UserAutocomplete({
-  placeholder = "Kullanıcı ara...",
-  onUserSelect,
-  onTextChange,
-  initialValue = "",
-  style,
-}: UserAutocompleteProps) {
-  const [query, setQuery] = useState(initialValue);
-  const [suggestions, setSuggestions] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null as any);
+interface UserAutocompleteProps {
+  onUserSelect: (user: User) => void;
+  placeholder?: string;
+}
 
-  useEffect(() => {
-    if (query.length >= 2) {
-      setLoading(true);
-      
-      // Debounce search
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+export default function UserAutocomplete({ 
+  onUserSelect, 
+  placeholder = "Search users..." 
+}: UserAutocompleteProps) {
+  const [query, setQuery] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const searchUsers = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setUsers([]);
+      setShowResults(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, display_name, username')
+        .or(`email.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
+        .limit(10);
+
+      if (error) {
+        console.error('[UserAutocomplete] Search error:', error);
+        return;
       }
-      
-      debounceRef.current = setTimeout(async () => {
-        try {
-          const results = await adminApi.searchUsers(query, 8) as AdminUser[];
-          setSuggestions(results);
-          setShowSuggestions(true);
-          setSelectedIndex(-1);
-        } catch (error) {
-          console.error('[UserAutocomplete] Search error:', error);
-          setSuggestions([]);
-        } finally {
-          setLoading(false);
-        }
-      }, 300);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+
+      const searchResults: User[] = (data || []).map(user => ({
+        id: user.id,
+        email: user.email || '',
+        display_name: user.display_name || '',
+        username: user.username || '',
+      }));
+
+      setUsers(searchResults);
+      setShowResults(true);
+    } catch (error) {
+      console.error('[UserAutocomplete] Search error:', error);
+    } finally {
       setLoading(false);
     }
+  };
 
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchUsers(query);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [query]);
 
-  const handleTextChange = (text: string) => {
-    setQuery(text);
-    onTextChange?.(text);
-  };
-
-  const handleUserSelect = (user: AdminUser) => {
-    setQuery(user.email);
-    setShowSuggestions(false);
+  const handleUserSelect = (user: User) => {
     onUserSelect(user);
-  };
-
-  const handleKeyPress = (e: any) => {
-    if (!showSuggestions || suggestions.length === 0) return;
-
-    switch (e.nativeEvent.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => 
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-          handleUserSelect(suggestions[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        setShowSuggestions(false);
-        setSelectedIndex(-1);
-        break;
-    }
-  };
-
-
-
-  const highlightMatch = (text: string, query: string) => {
-    if (!query) return text;
-    
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <Text key={index} style={styles.highlightedText}>
-          {part}
-        </Text>
-      ) : part
-    );
+    setQuery('');
+    setShowResults(false);
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Search size={20} color="#9aa4bf" style={styles.searchIcon} />
+        <Search size={20} color={Colors.textMuted} />
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          placeholderTextColor="#5f6a86"
           value={query}
-          onChangeText={handleTextChange}
-          onKeyPress={handleKeyPress}
-          onFocus={() => {
-            if (suggestions.length > 0) {
-              setShowSuggestions(true);
-            }
-          }}
-          onBlur={() => {
-            // Delay hiding to allow selection
-            setTimeout(() => setShowSuggestions(false), 200);
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="off"
+          onChangeText={setQuery}
+          onFocus={() => setShowResults(true)}
         />
-        {loading && (
-          <ActivityIndicator size="small" color="#4C6FFF" style={styles.loadingIcon} />
-        )}
       </View>
 
-      {showSuggestions && suggestions.length > 0 && (
-        <View style={styles.suggestionsContainer}>
-          {suggestions.map((user, index) => (
-            <TouchableOpacity
-              key={user.id}
-              style={[
-                styles.suggestionItem,
-                index === selectedIndex && styles.suggestionItemSelected
-              ]}
-              onPress={() => handleUserSelect(user)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.suggestionContent}>
-                <View style={styles.suggestionHeader}>
-                  <User size={16} color="#9aa4bf" />
-                  <Text style={styles.suggestionName}>
-                    {highlightMatch(user.name || user.username || 'Kullanıcı', query)}
-                  </Text>
-                </View>
-                <View style={styles.suggestionEmail}>
-                  <Mail size={14} color="#6f7899" />
-                  <Text style={styles.suggestionEmailText}>
-                    {highlightMatch(user.email, query)}
-                  </Text>
-                </View>
-                <Text style={styles.suggestionCountry}>
-                  Unknown
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      {showSuggestions && suggestions.length === 0 && query.length >= 2 && !loading && (
-        <View style={styles.noResults}>
-          <Text style={styles.noResultsText}>
-            &quot;{query}&quot; için kullanıcı bulunamadı
-          </Text>
+      {showResults && (
+        <View style={styles.resultsContainer}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Searching...</Text>
+            </View>
+          ) : users.length > 0 ? (
+            <FlatList
+              data={users}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.userItem}
+                  onPress={() => handleUserSelect(item)}
+                >
+                  <User size={16} color={Colors.primary} />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>
+                      {item.display_name || item.username || 'No name'}
+                    </Text>
+                    <Text style={styles.userEmail}>{item.email}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              style={styles.resultsList}
+            />
+          ) : query ? (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>No users found</Text>
+            </View>
+          ) : null}
         </View>
       )}
     </View>
@@ -207,104 +140,70 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#101015',
+    backgroundColor: Colors.backgroundColor,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#23263a',
     paddingHorizontal: 16,
-    height: 48,
-  },
-  searchIcon: {
-    marginRight: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   input: {
     flex: 1,
-    color: '#fff',
-    fontSize: 14,
-    paddingVertical: 0,
+    marginLeft: 12,
+    fontSize: 16,
+    color: Colors.text,
   },
-  loadingIcon: {
-    marginLeft: 8,
-  },
-  suggestionsContainer: {
+  resultsContainer: {
     position: 'absolute',
-    top: 52,
+    top: '100%',
     left: 0,
     right: 0,
-    backgroundColor: '#101015',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#23263a',
-    maxHeight: 300,
+    borderColor: Colors.border,
+    marginTop: 4,
+    maxHeight: 200,
     zIndex: 1001,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-      },
-      default: {
-        elevation: 8,
-      },
-    }),
   },
-  suggestionItem: {
+  resultsList: {
+    maxHeight: 200,
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1d2e',
+    borderBottomColor: Colors.border,
   },
-  suggestionItemSelected: {
-    backgroundColor: '#1a1d2e',
-  },
-  suggestionContent: {
+  userInfo: {
+    marginLeft: 12,
     flex: 1,
   },
-  suggestionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-    gap: 8,
-  },
-  suggestionName: {
+  userName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-  },
-  suggestionEmail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    color: Colors.text,
     marginBottom: 2,
   },
-  suggestionEmailText: {
+  userEmail: {
     fontSize: 12,
-    color: '#9aa4bf',
-    flex: 1,
+    color: Colors.textMuted,
   },
-  suggestionCountry: {
-    fontSize: 11,
-    color: '#6f7899',
-    marginTop: 2,
+  loadingContainer: {
+    padding: 12,
+    alignItems: 'center',
   },
-  highlightedText: {
-    backgroundColor: '#4C6FFF',
-    color: '#fff',
-    fontWeight: '700',
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textMuted,
   },
-  noResults: {
-    position: 'absolute',
-    top: 52,
-    left: 0,
-    right: 0,
-    backgroundColor: '#101015',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#23263a',
-    padding: 16,
-    zIndex: 1001,
+  noResultsContainer: {
+    padding: 12,
+    alignItems: 'center',
   },
   noResultsText: {
     fontSize: 14,
-    color: '#9aa4bf',
-    textAlign: 'center',
+    color: Colors.textMuted,
   },
 });

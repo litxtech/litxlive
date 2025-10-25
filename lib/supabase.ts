@@ -15,10 +15,10 @@ const supabaseUrl = envUrl as string;
 const supabaseAnonKey = envAnon as string;
 
 const fetchWithTimeout: typeof fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const timeoutMs = 30000;
+  const timeoutMs = 60000; // 30s -> 60s
   const controller = new AbortController();
   const id = setTimeout(() => {
-    console.warn('[Supabase][fetch] Request timeout after 30s:', input);
+    console.warn('[Supabase][fetch] Request timeout after 60s:', input);
     controller.abort();
   }, timeoutMs);
   try {

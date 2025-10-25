@@ -46,7 +46,9 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('[Dashboard] Auth check - authLoading:', authLoading, 'isAuthenticated:', isAuthenticated);
     if (!authLoading && !isAuthenticated) {
+      console.log('[Dashboard] Not authenticated, redirecting to admin');
       router.replace('/admin' as any);
     }
   }, [isAuthenticated, authLoading, router]);

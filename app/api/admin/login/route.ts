@@ -21,3 +21,8 @@ export async function POST(req: Request) {
     return Response.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+// Default export for Expo Router
+export default function AdminLoginRoute() {
+  return null;
+}

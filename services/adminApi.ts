@@ -40,6 +40,41 @@ export interface AdminLog {
   details?: Record<string, any>;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string;
+  username: string;
+  created_at: string;
+  last_seen: string;
+  is_verified: boolean;
+  is_banned: boolean;
+  coins: number;
+  level: number;
+  risk_score: number;
+  status: string;
+}
+
+export interface AdminUsersListResponse {
+  users: AdminUser[];
+  total: number;
+}
+
+export interface AdminUserProfile {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  displayName: string | null;
+  city: string | null;
+  gender: string | null;
+  orientation: string | null;
+  phoneCountry: string | null;
+  phoneNumber: string | null;
+  phoneE164: string | null;
+}
+
 export interface FooterContent {
   id: string;
   section_name: string;
@@ -410,6 +445,64 @@ export const adminApi = {
       console.log('[AdminAPI] User verified successfully:', userId);
     } catch (error) {
       console.error('[AdminAPI] Verify user error:', error);
+      throw error;
+    }
+  },
+
+  // Users Management
+  async getUsers(params?: { limit?: number; offset?: number; query?: string }): Promise<AdminUsersListResponse> {
+    try {
+      const limit = params?.limit || 25;
+      const offset = params?.offset || 0;
+      const query = params?.query;
+
+      let supabaseQuery = supabase
+        .from('profiles')
+        .select('id, email, display_name, username, created_at, last_seen, is_verified, coins')
+        .range(offset, offset + limit - 1)
+        .order('created_at', { ascending: false });
+
+      if (query) {
+        supabaseQuery = supabaseQuery.or(`email.ilike.%${query}%,display_name.ilike.%${query}%,username.ilike.%${query}%`);
+      }
+
+      const { data: users, error: usersError } = await supabaseQuery;
+
+      if (usersError) {
+        console.error('[AdminAPI] Get users error:', usersError);
+        throw new Error('Failed to fetch users');
+      }
+
+      // Get total count
+      const { count, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('[AdminAPI] Get users count error:', countError);
+      }
+
+      const adminUsers: AdminUser[] = (users || []).map(user => ({
+        id: user.id,
+        email: user.email || '',
+        display_name: user.display_name || '',
+        username: user.username || '',
+        created_at: user.created_at,
+        last_seen: user.last_seen || '',
+        is_verified: user.is_verified || false,
+        is_banned: false, // Bu bilgiyi ayrı bir sorgu ile alabilirsiniz
+        coins: user.coins || 0,
+        level: 1, // Default level
+        risk_score: 0, // Default risk score
+        status: 'active', // Default status
+      }));
+
+      return {
+        users: adminUsers,
+        total: count || 0,
+      };
+    } catch (error) {
+      console.error('[AdminAPI] Get users error:', error);
       throw error;
     }
   },

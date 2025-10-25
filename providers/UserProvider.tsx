@@ -66,7 +66,7 @@ export const [UserProvider, useUser] = createContextHook(() => {
         setTimeout(() => {
           console.warn("[UserProvider] Session fetch timeout, using cached data");
           resolve(null);
-        }, 8000);
+        }, 15000); // 8s -> 15s
       });
 
       const session = await Promise.race([sessionPromise, timeoutPromise]);
@@ -90,7 +90,7 @@ export const [UserProvider, useUser] = createContextHook(() => {
           setTimeout(() => {
             console.warn("[UserProvider] Profile fetch timeout");
             resolve({ data: null, error: { message: 'Timeout' } });
-          }, 5000);
+          }, 10000); // 5s -> 10s
         });
 
         const { data: profile, error: profileError } = await Promise.race([profilePromise, profileTimeout]);

@@ -6,7 +6,7 @@ export async function GET() {
       username: "admin",
       display_name: "Litxtech LLC",
       is_super_admin: true,
-      permissions: { 
+      permissions: {
         all: true,
         users: true,
         content: true,
@@ -18,4 +18,9 @@ export async function GET() {
     console.error("[admin/me] Error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// Default export for Expo Router
+export default function AdminMeRoute() {
+  return null;
 }

@@ -37,14 +37,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const checkAdminStatus = async () => {
+    console.log('[AdminProvider] checkAdminStatus called, user:', user?.email);
+    
     if (!user) {
+      console.log('[AdminProvider] No user, setting isAdmin to false');
       setIsAdmin(false);
+      setIsAuthenticated(false);
       setIsLoading(false);
+      return;
+    }
+
+    // Prevent multiple simultaneous calls
+    if (isLoading) {
+      console.log('[AdminProvider] Already checking, skipping');
       return;
     }
 
     try {
       setIsLoading(true);
+      console.log('[AdminProvider] Starting admin check for user:', user.email);
       
       // First check if admin_users table exists
       const { data: tableCheck, error: tableError } = await supabase
@@ -53,16 +64,20 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .limit(1);
 
       if (tableError) {
-        console.log('[AdminProvider] Admin table not found, creating fallback admin check');
+        console.log('[AdminProvider] Admin table not found, using fallback admin check');
         
         // Fallback: Check if user email is admin email
         if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+          console.log('[AdminProvider] User is admin via fallback check');
           setIsAdmin(true);
           setIsAuthenticated(true);
           setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
+          console.log('[AdminProvider] Admin status set to true, isAuthenticated: true');
+          setIsLoading(false);
           return;
         }
         
+        console.log('[AdminProvider] User is not admin via fallback check');
         setIsAdmin(false);
         return;
       }
@@ -78,18 +93,23 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (error) {
         // Fallback: Check if user email is admin email
         if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+          console.log('[AdminProvider] User is admin via fallback check (error case)');
           setIsAdmin(true);
           setIsAuthenticated(true);
           setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
+          setIsLoading(false);
           return;
         }
         
         console.log('[AdminProvider] User is not admin');
         setIsAdmin(false);
+        setIsAuthenticated(false);
+        setIsLoading(false);
         return;
       }
 
       if (adminUser && adminUser.is_active) {
+        console.log('[AdminProvider] User is admin via database check');
         setIsAdmin(true);
         setIsAuthenticated(true);
         const mappedAdminData: AdminData = {
@@ -99,6 +119,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         };
         setAdminData(mappedAdminData);
       } else {
+        console.log('[AdminProvider] User is not admin via database check');
         setIsAdmin(false);
         setIsAuthenticated(false);
       }
