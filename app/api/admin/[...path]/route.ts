@@ -96,3 +96,8 @@ async function handle(
     return json({ error: "proxy_error", detail: String(error) }, { status: 500 });
   }
 }
+
+// Default export for Expo Router
+export default function AdminPathRoute() {
+  return null;
+}

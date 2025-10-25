@@ -15,10 +15,10 @@ const supabaseUrl = envUrl as string;
 const supabaseAnonKey = envAnon as string;
 
 const fetchWithTimeout: typeof fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const timeoutMs = 60000; // 30s -> 60s
+  const timeoutMs = 120000; // 60s -> 120s (2 dakika)
   const controller = new AbortController();
   const id = setTimeout(() => {
-    console.warn('[Supabase][fetch] Request timeout after 60s:', input);
+    console.warn('[Supabase][fetch] Request timeout after 120s:', input);
     controller.abort();
   }, timeoutMs);
   try {
@@ -28,6 +28,19 @@ const fetchWithTimeout: typeof fetch = async (input: RequestInfo | URL, init?: R
     if (e?.name === 'AbortError') {
       console.error('[Supabase][fetch] Request timed out:', input);
       throw new Error('İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.');
+    }
+    // Network error retry
+    if (e?.message?.includes('NetworkError') || e?.message?.includes('fetch')) {
+      console.warn('[Supabase][fetch] Network error, retrying...', input);
+      // Retry once after 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        const retryRes = await fetch(input, { ...(init ?? {}), signal: controller.signal });
+        return retryRes;
+      } catch (retryError) {
+        console.error('[Supabase][fetch] Retry failed:', retryError);
+        throw e; // Throw original error
+      }
     }
     console.error('[Supabase][fetch] Network error:', e?.name, e?.message, input);
     throw e;

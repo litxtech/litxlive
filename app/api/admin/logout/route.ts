@@ -12,3 +12,8 @@ export async function POST() {
   headers.append("set-cookie", `${ADMIN_COOKIE}=; Path=/; Max-Age=0`);
   return new Response(JSON.stringify({ success: true }), { status: 200, headers });
 }
+
+// Default export for Expo Router
+export default function AdminLogoutRoute() {
+  return null;
+}

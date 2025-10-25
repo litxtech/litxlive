@@ -108,3 +108,8 @@ export async function POST(request: Request) {
     });
   }
 }
+
+// Default export for Expo Router
+export default function ApplicationsSubmitRoute() {
+  return null;
+}
