@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useUser } from './UserProvider';
 import { supabase } from '@/lib/supabase';
+import { saveAdminToken, getAdminToken } from '@/lib/adminSession';
 
 interface AdminRole {
   name: string;
@@ -66,16 +67,22 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (tableError) {
         console.log('[AdminProvider] Admin table not found, using fallback admin check');
         
-        // Fallback: Check if user email is admin email
-        if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
-          console.log('[AdminProvider] User is admin via fallback check');
-          setIsAdmin(true);
-          setIsAuthenticated(true);
-          setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
-          console.log('[AdminProvider] Admin status set to true, isAuthenticated: true');
-          setIsLoading(false);
-          return;
-        }
+              // Fallback: Check if user email is admin email
+              if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+                console.log('[AdminProvider] User is admin via fallback check');
+                setIsAdmin(true);
+                setIsAuthenticated(true);
+                setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
+                
+                // Admin token'ı kaydet
+                const adminToken = `admin-token-${Date.now()}`;
+                await saveAdminToken(adminToken);
+                console.log('[AdminProvider] Admin token saved via fallback');
+                
+                console.log('[AdminProvider] Admin status set to true, isAuthenticated: true');
+                setIsLoading(false);
+                return;
+              }
         
         console.log('[AdminProvider] User is not admin via fallback check');
         setIsAdmin(false);
@@ -90,16 +97,22 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .single();
 
-      if (error) {
-        // Fallback: Check if user email is admin email
-        if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
-          console.log('[AdminProvider] User is admin via fallback check (error case)');
-          setIsAdmin(true);
-          setIsAuthenticated(true);
-          setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
-          setIsLoading(false);
-          return;
-        }
+            if (error) {
+              // Fallback: Check if user email is admin email
+              if (user.email === 'support@litxtech.com' || user.id === 'cba653e7-6ef9-4152-8a52-19c095cc8f1d') {
+                console.log('[AdminProvider] User is admin via fallback check (error case)');
+                setIsAdmin(true);
+                setIsAuthenticated(true);
+                setAdminData({ id: user.id, email: user.email, is_active: true, admin_roles: [{ name: 'admin' }] });
+                
+                // Admin token'ı kaydet
+                const adminToken = `admin-token-${Date.now()}`;
+                await saveAdminToken(adminToken);
+                console.log('[AdminProvider] Admin token saved via error fallback');
+                
+                setIsLoading(false);
+                return;
+              }
         
         console.log('[AdminProvider] User is not admin');
         setIsAdmin(false);
@@ -118,6 +131,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           admin_roles: adminUser.admin_roles || [],
         };
         setAdminData(mappedAdminData);
+        
+        // Admin token'ı kaydet
+        const adminToken = `admin-token-${Date.now()}`;
+        await saveAdminToken(adminToken);
+        console.log('[AdminProvider] Admin token saved');
       } else {
         console.log('[AdminProvider] User is not admin via database check');
         setIsAdmin(false);
