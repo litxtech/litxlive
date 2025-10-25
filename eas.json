@@ -16,11 +16,7 @@
       "distribution": "store",
       "channel": "preview",
       "android": {
-        "buildType": "app-bundle",
-        "env": {
-          "NODE_ENV": "production",
-          "EXPO_OPTIMIZE": "true"
-        }
+        "buildType": "app-bundle"
       }
     },
     "production": {
