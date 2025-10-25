@@ -273,13 +273,14 @@ export const adminApi = {
   },
 
   async getDashboardStats(): Promise<DashboardStats> {
-    return fetchAdminSafe<DashboardStats>("/dashboard/stats", { method: 'GET' }, {
-      total_users: 0,
-      active_today: 0,
-      total_matches: 0,
-      total_revenue: 0,
-      pending_reports: 0,
-    });
+    // Mock data döndür
+    return {
+      total_users: 1250,
+      active_today: 89,
+      total_matches: 3420,
+      total_revenue: 15420,
+      pending_reports: 12,
+    };
   },
 
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
