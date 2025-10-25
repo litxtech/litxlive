@@ -13,7 +13,7 @@
       }
     },
     "preview": {
-      "distribution": "internal",
+      "distribution": "store",
       "channel": "preview",
       "android": {
         "buildType": "app-bundle"
@@ -26,7 +26,8 @@
         "buildType": "app-bundle",
         "env": {
           "NODE_ENV": "production"
-        }
+        },
+        "gradleCommand": ":app:bundleRelease"
       }
     }
   },
