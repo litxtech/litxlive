@@ -21,8 +21,14 @@ import LumiAssistant from "@/components/LumiAssistant";
 
 import { Stack } from "expo-router";
 import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
-import { StripeProvider } from '@stripe/stripe-react-native';
-import { stripeConfig } from '@/lib/stripe';
+// Conditional Stripe imports for web compatibility
+let StripeProvider: any;
+let stripeConfig: any;
+
+if (Platform.OS !== 'web') {
+  StripeProvider = require('@stripe/stripe-react-native').StripeProvider;
+  stripeConfig = require('@/lib/stripe').stripeConfig;
+}
 
 
 
@@ -60,17 +66,25 @@ export default function RootLayout() {
     (async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
-      } catch (e) {
-        console.log('[SplashScreen] preventAutoHideAsync error', e);
-      }
-      try {
+        // Wait longer for app to initialize properly
+        await new Promise(resolve => setTimeout(resolve, 2000));
         await SplashScreen.hideAsync();
       } catch (e) {
-        console.log('[SplashScreen] hideAsync error', e);
+        console.log('[SplashScreen] error', e);
+        // Force hide splash screen even if there's an error
+        try {
+          await SplashScreen.hideAsync();
+        } catch (hideError) {
+          console.log('[SplashScreen] hideAsync error', hideError);
+        }
       }
     })();
 
-    WebBrowser.maybeCompleteAuthSession();
+    try {
+      WebBrowser.maybeCompleteAuthSession();
+    } catch (e) {
+      console.log('[WebBrowser] error', e);
+    }
 
     if (Platform.OS === 'web') {
       const viewport = document.querySelector('meta[name="viewport"]');
@@ -85,32 +99,41 @@ export default function RootLayout() {
     }
   }, []);
 
+  const AppContent = () => (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <UserProvider>
+            <AdminProvider>
+              <OwnerProvider>
+                <PolicyProvider>
+                  <ThemeProvider value={DefaultTheme}>
+                    <GestureHandlerRootView style={styles.container}>
+                      <StatusBar style="dark" />
+                      <ErrorBoundary>
+                        <RootLayoutNav />
+                        <PolicyGate />
+                        <LumiAssistant />
+                      </ErrorBoundary>
+                    </GestureHandlerRootView>
+                  </ThemeProvider>
+                </PolicyProvider>
+              </OwnerProvider>
+            </AdminProvider>
+          </UserProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+
+  // Web için Stripe olmadan, mobile için Stripe ile
+  if (Platform.OS === 'web') {
+    return <AppContent />;
+  }
+
   return (
     <StripeProvider publishableKey={stripeConfig.publishableKey}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <LanguageProvider>
-            <UserProvider>
-              <AdminProvider>
-                <OwnerProvider>
-                  <PolicyProvider>
-                    <ThemeProvider value={DefaultTheme}>
-                      <GestureHandlerRootView style={styles.container}>
-                        <StatusBar style="dark" />
-                        <ErrorBoundary>
-                          <RootLayoutNav />
-                          <PolicyGate />
-                          <LumiAssistant />
-                        </ErrorBoundary>
-                      </GestureHandlerRootView>
-                    </ThemeProvider>
-                  </PolicyProvider>
-                </OwnerProvider>
-              </AdminProvider>
-            </UserProvider>
-          </LanguageProvider>
-        </QueryClientProvider>
-      </trpc.Provider>
+      <AppContent />
     </StripeProvider>
   );
 }

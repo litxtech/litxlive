@@ -96,7 +96,7 @@ export default function ChatScreen() {
         const confirmed = typeof window !== 'undefined' ? window.confirm('Bu mesajı silmek istediğinize emin misiniz?') : false;
         if (confirmed) handleDeleteMessage(item.id);
       } else {
-        // eslint-disable-next-line no-alert
+         
         // Using React Native Alert
         import('react-native').then(({ Alert }) => {
           Alert.alert(

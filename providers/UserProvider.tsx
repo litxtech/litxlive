@@ -28,6 +28,8 @@ export const [UserProvider, useUser] = createContextHook(() => {
   const hydrateFromSupabase = useCallback(async () => {
     try {
       console.log("[UserProvider] Hydrating from Supabase session...");
+      // Add delay to prevent race conditions
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);

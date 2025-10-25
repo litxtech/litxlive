@@ -2,8 +2,8 @@
   "expo": {
     "name": "lumi video chat",
     "slug": "lumi-video-chat",
-    "version": "1.0.0",
-    "runtimeVersion": "1.0.0",
+    "version": "1.0.1",
+    "runtimeVersion": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -27,12 +27,12 @@
         "CFBundleAllowMixedLocalizations": true,
         "CFBundleLocalizations": [
           "fr"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       },
       "usesIcloudStorage": true
     },
     "android": {
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -42,15 +42,16 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.VIBRATE",
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "intentFilters": [
         {
@@ -132,9 +133,13 @@
     },
     "extra": {
       "eas": {
-        "projectId": "ebc53d02-6564-4eeb-855d-5f8ab4488fe2"
-      }
+        "projectId": "b70e3082-d2b5-47a5-ad2e-0148889c48e8"
+      },
+      "router": {}
     },
-    "owner": "litxtechltd"
+    "owner": "sonertoprak",
+    "updates": {
+      "url": "https://u.expo.dev/b70e3082-d2b5-47a5-ad2e-0148889c48e8"
+    }
   }
 }

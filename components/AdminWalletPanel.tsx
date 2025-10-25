@@ -18,7 +18,7 @@ function formatNumber(n: number): string {
 function makeIdem(prefix: string = 'adm'): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 
 export default function AdminWalletPanel({ userId }: Props) {
   const insets = useSafeAreaInsets();

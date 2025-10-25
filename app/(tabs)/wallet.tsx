@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
-} from "react-native";
+ Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Coins, Plus, X, Crown } from "lucide-react-native";
 import { useUser } from "@/providers/UserProvider";
@@ -17,7 +17,8 @@ import { IAP_PACKAGES, formatPrice, COMPANY_INFO } from "@/constants/iapPackages
 import { trpc } from "@/lib/trpc";
 import TransactionHistory from "@/components/TransactionHistory";
 import { Colors } from "@/constants/colors";
-import { Platform } from "react-native";
+
+// Platform-specific Stripe imports
 import StripePayment from "@/components/StripePayment";
 import PaymentModal from "@/components/PaymentModal";
 

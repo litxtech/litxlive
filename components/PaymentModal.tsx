@@ -8,9 +8,14 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { CreditCard, Star, Crown, X, Check } from 'lucide-react-native';
-import { useStripe } from '@stripe/stripe-react-native';
+// Conditional Stripe import for web compatibility
+let useStripe: any;
+if (Platform.OS !== 'web') {
+  useStripe = require('@stripe/stripe-react-native').useStripe;
+}
 import { paymentService } from '@/services/paymentService';
 import { COIN_PACKAGES, SUBSCRIPTION_PACKAGES } from '@/lib/stripe';
 import { Colors } from '@/constants/colors';
