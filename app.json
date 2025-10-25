@@ -38,9 +38,6 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.litxtech.lumi",
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
-      "minSdkVersion": 21,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
