@@ -15,7 +15,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAdmin } from '@/providers/AdminProvider';
-import { adminApi, AdminUser, AdminUsersListResponse, AdminUserProfile } from '@/services/adminApi';
+import { adminApi } from '@/services/adminApi';
+import type { AdminUser, AdminUsersListResponse, AdminUserProfile } from '@/services/adminApi';
 import AdminSidebar from '@/components/AdminSidebar';
 import UserAutocomplete from '@/components/UserAutocomplete';
 import { Search, Ban, Coins, CheckCircle, X, Pencil } from 'lucide-react-native';
@@ -50,7 +51,10 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
+      setLoading(true);
+      console.log('[Users] Loading users with params:', { limit: pageSize, offset: page * pageSize, query: searchQuery.trim() || undefined });
       const res = await adminApi.getUsers({ limit: pageSize, offset: page * pageSize, query: searchQuery.trim() || undefined });
+      console.log('[Users] Users loaded:', res.users.length, 'total:', res.total);
       setUsers(res.users);
       setTotal(res.total);
     } catch (err) {
@@ -205,11 +209,17 @@ export default function AdminUsers() {
           {users.map((u) => (
             <View key={u.id} style={styles.userCard}>
               <View style={styles.userInfo}>
-                <Text style={styles.userName} testID="admin-user-name">{u.username ?? u.name ?? u.email}</Text>
+                <Text style={styles.userName} testID="admin-user-name">{u.display_name || u.username || u.email}</Text>
                 <Text style={styles.userEmail} testID="admin-user-email">{u.email}</Text>
                 <View style={styles.userMeta}>
                   <Text style={styles.userMetaText}>Coins: {u.coins}</Text>
-                  {u.banned && (
+                  <Text style={styles.userMetaText}>Level: {u.level}</Text>
+                  {u.is_verified && (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedText}>Verified</Text>
+                    </View>
+                  )}
+                  {u.is_banned && (
                     <View style={styles.bannedBadge}>
                       <Text style={styles.bannedText}>Banned</Text>
                     </View>
@@ -673,6 +683,18 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  verifiedBadge: {
+    backgroundColor: '#51cf66',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  verifiedText: {
+    color: '#fff',
+    fontSize: 10,
     fontWeight: '600',
   },
 });
